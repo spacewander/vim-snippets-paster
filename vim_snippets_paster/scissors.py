@@ -1,10 +1,80 @@
 # open snippets in ../snippets to understand snippet syntax of each plugin
 
+import re
+
 def cut_snipmate(snippet, convert, paste):
-    return convert(snippet)
+    """
+    file format:
+        [version digits]
+        [extends filetype]
+        snippet[!] xxx
+            snippet body
+        snippet[!] xxx
+            snippet body
+    """
+    def comment(line):
+        if line.strip() != '' or line.startswith('#'):
+            return '#' + line
+        return line
+
+    in_snip = False
+    begin = end = 0
+    texts = []
+    ws = re.compile('^\S')
+    for linum, line in enumerate(snippet):
+        if in_snip is False and line.startswith('snippet'):
+            end = linum
+            in_snip = True
+            # cut non-snippet text
+            texts.append('\n'.join(map(comment, snippet[begin:end])))
+            begin = end
+        elif in_snip is True and re.match(ws, line):
+            end = linum
+            in_snip = False
+            # cut snippet text
+            texts.append(convert(snippet[begin:end]))
+            begin = end
+
+    if in_snip is True:
+        texts.append(convert(snippet[begin:]))
+    else:
+        texts.append('\n'.join(map(comment, snippet[begin:])))
+    return paste(texts)
 
 def cut_ultisnips(snippet, convert, paste):
-    return ""
+    """
+    file format:
+        [extends filetype]   # extend snippets from filetype x
+        [priority digits]   # set priority for all snippets after it
+
+        snippet ...
+        endsnippet
+    """
+    def comment(line):
+        if line.strip() != '' or line.startswith('#'):
+            return '#' + line
+        return line
+
+    in_snip = False
+    begin = end = 0
+    texts = []
+    for linum, line in enumerate(snippet):
+        if in_snip is False and line.startswith('snippet'):
+            end = linum
+            in_snip = True
+            # cut non-snippet text
+            texts.append('\n'.join(map(comment, snippet[begin:end])))
+            begin = end
+        elif in_snip is True and line.startswith('endsnippet'):
+            end = linum
+            in_snip = False
+            # cut snippet text
+            texts.append(convert(snippet[begin:end+1]))
+            begin = end + 1
+
+    if in_snip is False:
+        texts.append('\n'.join(map(comment, snippet[begin:])))
+    return paste(texts)
 
 def cut_xptemplate(snippet, convert, paste):
     """
@@ -44,7 +114,7 @@ def cut_xptemplate(snippet, convert, paste):
         */
     """
     def comment(line):
-        if line.strip() != '':
+        if line.strip() != '' or line.startswith('"'):
             return '"' + line
         return line
 
