@@ -20,13 +20,14 @@ def cut_snipmate(snippet, convert, paste):
     in_snip = False
     begin = end = 0
     texts = []
+    context = {}
     ws = re.compile('^\S')
     for linum, line in enumerate(snippet):
         if in_snip is False and line.startswith('snippet'):
             end = linum
             in_snip = True
             # cut non-snippet text
-            texts.append('\n'.join(map(comment, snippet[begin:end])))
+            texts.append('\n'.join(map(comment, snippet[begin:end], context)))
             begin = end
         elif in_snip is True and re.match(ws, line):
             end = linum
@@ -36,10 +37,10 @@ def cut_snipmate(snippet, convert, paste):
             begin = end
 
     if in_snip is True:
-        texts.append(convert(snippet[begin:]))
+        texts.append(convert(snippet[begin:], context))
     else:
         texts.append('\n'.join(map(comment, snippet[begin:])))
-    return paste(texts)
+    return paste(texts, context)
 
 def cut_ultisnips(snippet, convert, paste):
     """
@@ -58,6 +59,7 @@ def cut_ultisnips(snippet, convert, paste):
     in_snip = False
     begin = end = 0
     texts = []
+    context = {}
     for linum, line in enumerate(snippet):
         if in_snip is False and line.startswith('snippet'):
             end = linum
@@ -69,12 +71,12 @@ def cut_ultisnips(snippet, convert, paste):
             end = linum
             in_snip = False
             # cut snippet text
-            texts.append(convert(snippet[begin:end+1]))
+            texts.append(convert(snippet[begin:end+1], context))
             begin = end + 1
 
     if in_snip is False:
         texts.append('\n'.join(map(comment, snippet[begin:])))
-    return paste(texts)
+    return paste(texts, context)
 
 def cut_xptemplate(snippet, convert, paste):
     """
@@ -121,6 +123,7 @@ def cut_xptemplate(snippet, convert, paste):
     in_snip = False
     begin = end = last_nonempty_line = 0
     texts = []
+    context = {}
     for linum, line in enumerate(snippet):
         if in_snip is False and line.startswith('XPT '):
             end = linum
@@ -132,17 +135,17 @@ def cut_xptemplate(snippet, convert, paste):
             if line.startswith('..XPT'):
                 in_snip = False
                 end = linum
-                texts.append(convert(snippet[begin:end])) # cut snippet text
+                texts.append(convert(snippet[begin:end], context)) # cut snippet text
                 begin = end + 1
             elif line.startswith('XPT '):
-                texts.append(convert(snippet[begin:last_nonempty_line+1]))
+                texts.append(convert(snippet[begin:last_nonempty_line+1], context))
                 begin = end = linum
             elif line != '':
                 last_nonempty_line = linum
 
     if in_snip is True:
-        texts.append(convert(snippet[begin:last_nonempty_line+1]))
+        texts.append(convert(snippet[begin:last_nonempty_line+1], context))
     else:
         texts.append('\n'.join(map(comment, snippet[begin:])))
-    return paste(texts)
+    return paste(texts, context)
 
