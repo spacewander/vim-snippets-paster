@@ -1,8 +1,8 @@
 import itertools
 
-import snipmate
-import ultisnips
-import xptemplate
+from . import snipmate
+from . import ultisnips
+from . import xptemplate
 from .ultility import NotImplementFeatureException, UnsupportFeatureException
 
 def make_converter(src, dest):

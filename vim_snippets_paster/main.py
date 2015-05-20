@@ -1,9 +1,9 @@
 from sys import exit
 import optparse
 
-import converters
-import pasters
-import scissors
+from . import converters
+from . import pasters
+from . import scissors
 
 def exit_with_msg(msg):
     print(msg)
