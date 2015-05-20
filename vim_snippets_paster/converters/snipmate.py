@@ -1,9 +1,12 @@
 from .snippet import Snippet
+from .ultility import UnsupportFeatureException
 
 def parse(input, ct):
     """
     snippet[!] xxx [description]
         snippet body
+
+    If a not implemented feature is parsed, raise a NotImplementFeatureException.
     """
     indent_size = len(input[1]) - len(input[1].lstrip())
     def remove_indent(line):
@@ -22,5 +25,9 @@ def parse(input, ct):
     return snip
 
 def build(snip):
-    return snip
+    if len(snip.name.split()) > 1:
+        raise UnsupportFeatureException("snipmate doesn't allow whitespace in snippet trigger")
+    head = "snippet %s %s\n" % (snip.name, snip.description)
+    body = map(lambda x: '\t' + x, snip.body.split('\n'))
+    return head + '\n'.join(body)
 

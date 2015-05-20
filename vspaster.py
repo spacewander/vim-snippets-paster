@@ -4,5 +4,4 @@
 from vim_snippets_paster.main import main
 
 if __name__ == '__main__':
-    #print(main())
-    main()
+    print(main())

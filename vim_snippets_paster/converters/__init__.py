@@ -3,6 +3,7 @@ import itertools
 import snipmate
 import ultisnips
 import xptemplate
+from .ultility import NotImplementFeatureException, UnsupportFeatureException
 
 def make_converter(src, dest):
     """to make creating function in loop possible"""
@@ -20,19 +21,47 @@ def convert(src, dest, input, ct):
 
     :ct     the global context needed in parsing
     """
-    if src == 'snipmate':
-        snip = snipmate.parse(input, ct)
-    elif src == 'ultisnips':
-        snip = ultisnips.parse(input, ct)
-    elif src == 'xptemplate':
-        snip = xptemplate.parse(input, ct)
+    try:
+        if src == 'snipmate':
+            snip = snipmate.parse(input, ct)
+            return build(snip, dest)
+        elif src == 'ultisnips':
+            snip = ultisnips.parse(input, ct)
+            return build(snip, dest)
+        elif src == 'xptemplate':
+            snips = xptemplate.parse(input, ct)
+            # because the 'alias' and 'synonym' attributes,
+            # there may be multiple parsed results
+            return "\n\n".join(build(s, dest) for s in snips)
 
-    if dest == 'snipmate':
-        return snipmate.build(snip)
-    elif dest == 'ultisnips':
-        return ultisnips.build(snip)
-    elif dest == 'xptemplate':
-        return xptemplate.build(snip)
+    except NotImplementFeatureException as e:
+        if src == 'xptemplate':
+            comment = '"'
+        else:
+            comment = '#'
+        output = "%s%s\n" % (comment, e)
+        for line in input:
+            output += "%s%s\n" % (comment, line)
+        return output
     # impossible to reach here
     raise ValueError("unsupport snippet type %s got" % dest)
+
+
+def build(snippet, dest):
+    try:
+        if dest == 'snipmate':
+            return snipmate.build(snippet)
+        elif dest == 'ultisnips':
+            return ultisnips.build(snippet)
+        elif dest == 'xptemplate':
+            return xptemplate.build(snippet)
+    except UnsupportFeatureException as e:
+        if src == 'xptemplate':
+            comment = '"'
+        else:
+            comment = '#'
+        output = "%s%s\n" % (comment, e)
+        for line in input:
+            output += "%s%s\n" % (comment, line)
+        return output
 

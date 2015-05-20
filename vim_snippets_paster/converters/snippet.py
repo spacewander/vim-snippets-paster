@@ -7,6 +7,8 @@ class Snippet(object):
         u_ : ultisnips
         x_ : xptemplate
 
+    Notice: this object is just a container,
+    don't add any methods which will change the inside value to it.
     """
     def __init__(self, type, name, body, description):
         """

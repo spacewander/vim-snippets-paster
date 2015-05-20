@@ -8,6 +8,7 @@ def parse(input, ct):
                 ${0:#statements}
         fi
         endsnippet
+    If a not implemented feature is parsed, raise a NotImplementFeatureException.
     """
     # https://github.com/SirVer/ultisnips/blob/master/pythonx/UltiSnips/snippet/source/file/ultisnips.py
     # know how to parse from function _handle_snippet_or_global, thanks for SirVer
