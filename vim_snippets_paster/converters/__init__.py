@@ -30,8 +30,8 @@ def convert(src, dest, input, ct):
             return build(snip, dest)
         elif src == 'xptemplate':
             snips = xptemplate.parse(input, ct)
-            # because the 'alias' and 'synonym' attributes,
-            # there may be multiple parsed results
+            # because the 'hidden', 'alias' and 'synonym' attributes,
+            # there may be no, one, or multiple parsed results
             return "\n\n".join(build(s, dest) for s in snips)
 
     except NotImplementFeatureException as e:

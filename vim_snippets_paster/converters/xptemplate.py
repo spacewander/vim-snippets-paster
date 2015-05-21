@@ -41,16 +41,38 @@ class XptemplateParser(object):
                 `cursor^
             }
         """
+        if 'hidden' in ct:
+            self.hidden = ct['hidden']
+        else:
+            self.hidden = {}
+
         head, _, comment = input[0].partition('"')
         head = head.split()
         snip_name = head[1]
         self.x_attributes = {}
-        for attr in head[2:]:
-            name, _, value = attr.partition('=')
+        cur_attr = ''
+        for i, attr in enumerate(head[2:]):
+            # unescape '\ '
+            if attr.endswith('\\'):
+                cur_attr = attr[:-1] + ' '
+                continue
+            cur_attr += attr
+            name, _, value = cur_attr.partition('=')
+            cur_attr = ''
             self.x_attributes[name] = value
 
         if 'hidden' in self.x_attributes:
-            raise NotImplementFeatureException(feature='xpt-snippet-hidden')
+            if 'hidden' not in ct:
+                ct['hidden'] = {}
+            # store the snippet body so that other snippets can include it
+            ct['hidden'][snip_name] = '\n'.join(input[1:])
+            self.snippets = []
+            return
+
+        # hint is like "description
+        if comment == '' and 'hint' in self.x_attributes:
+            comment = self.x_attributes['hint']
+        # xpt-snippet-wrap(VISUAL placeholder)
         if 'wrap' in self.x_attributes:
             self.visual = self.x_attributes['wrap']
         elif 'wraponly' in self.x_attributes:
@@ -58,9 +80,22 @@ class XptemplateParser(object):
         else:
             self.visual = None
 
-        body = '\n'.join(input[1:])
+        # not implemented for XSET and XSETm yet, just ignore them
+        body_lines = []
+        fitered_xset_body = [l for l in input[1:] if not l.startswith('XSET ')]
+        in_XSETm = False
+        for line in fitered_xset_body:
+            if line.startswith('XSETm END'):
+                in_XSETm = False
+                continue
+            elif line.startswith('XSETm '):
+                in_XSETm = True
+            if not in_XSETm:
+                body_lines.append(line)
+        body = '\n'.join(body_lines)
+
         snip = Snippet('xptemplate', snip_name, body=self.parse_body(body),
-                    description=comment)
+                    description=self.unescape_description(comment.lstrip()))
         snip.x_attributes = self.x_attributes
 
         self.snippets = [snip]
@@ -70,7 +105,8 @@ class XptemplateParser(object):
             self.snippets.append(alias)
         elif 'synonym' in self.x_attributes:
             aliases = self.x_attributes['synonym'].split('|')
-            self.snippets.extend(Snippet('xptemplate', alias_name, body=snip.body,
+            self.snippets.extend(Snippet('xptemplate',
+                                         alias_name, body=snip.body,
                                          description=snip.description)
                                  for alias_name in aliases)
         # TODO: abbr
@@ -90,11 +126,18 @@ class XptemplateParser(object):
         # match.group(1) may be 'value^placeholder' or 'value'
         value, _, placeholder = match.group(1).partition('^')
         # filter specific value
-        if value == 'cursor':
+        if value in ('cursor', 'CURSOR'):
             return "$0"
         if value in ('$author', '$email'):
-            raise NotImplementFeatureException(
-                "parsing user defined variable %s not implemented" % value)
+            return '`%s`' % value
+        # In xptemplate, the syntax used to embed vimscript is the same as
+        # one used to mark variable.
+        # Because they share same vimscript context.
+        # Therefore, it is not easy to distinguish embeded vimscript and variable.
+        # Currently, if there is a function call inside,
+        # we will treat it as embeded vimscript.
+        if value.find('(') < value.find(')'): # function call inside
+            return '`%s`' % value
 
         # xpt-snippet-wrap(VISUAL placeholder)
         if value == self.visual:
@@ -105,7 +148,16 @@ class XptemplateParser(object):
         if value in PREDEFINED_VALUE:
             return PREDEFINED_VALUE[value]
 
-        if (value[0] == ':' and value[-1] == ':') or value.startswith('Include:'):
+        include_tp = ''
+        if value[0] == ':' and value[-1] == ':':
+            include_tp = value[1:-1]
+        elif value.startswith('Include:'):
+            include_tp = value[8:]
+        if include_tp != '':
+            # snippet name only supports \w, if '(' exists,
+            # it will be 'Inclusion with parameter', which is not implemented yet.
+            if '(' not in include_tp and include_tp in self.hidden:
+                return self.parse_body(self.hidden[include_tp])
             raise NotImplementFeatureException(feature="xpt-snippet-include")
 
         if value not in self.parsed_value:
@@ -125,6 +177,10 @@ class XptemplateParser(object):
         p = re.compile('`([^^]+\^?\w*?)\^')
         r = re.sub(p, self.convert_xptemplate_placeholder, body)
         return r
+
+    def unescape_description(self, desc):
+        """unescape \$ and \("""
+        return desc.replace('\$', '$').replace('\(', '(')
 
 
 def build(snip):
