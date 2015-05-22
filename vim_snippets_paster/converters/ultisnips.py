@@ -1,4 +1,29 @@
+import re
+
 from .snippet import Snippet
+from .ultility import (format_placeholders, NotImplementFeatureException,
+                       embeded)
+
+def preprocess_with_options(body, options):
+    """
+    preprocess the snippet body according to options before put into Snippet
+    """
+    options = set(options)
+
+def handle_embeded_variables(body):
+    def handle_embeded_variable(match):
+        value = match.group(1)
+        if value == '`g:snips_author`':
+            return '$author'
+        if value == '`g:snips_author_email`':
+            return '$email'
+        if value.startswith('!p '):
+            raise NotImplementFeatureException(feature='embed python code')
+        if value.startswith('!v '):
+            return '`%s`' % value[3:]
+        raise NotImplementFeatureException(feature='embed shell code')
+
+    return re.sub(embeded, handle_embeded_variable, body)
 
 def parse(input, ct):
     """
@@ -40,14 +65,24 @@ def parse(input, ct):
     snip_name = head.strip()
     # always, the code believe the syntax of snippet is definitely true.
     # don't disappoint it!
-
-    snip = Snippet('ultisnips', snip_name, body='\n'.join(input[1:-1]),
+    body = format_placeholders(input[1:-1])
+    preprocess_with_options(body, u_options)
+    snip = Snippet('ultisnips', snip_name,
+                   body=handle_embeded_variables('\n'.join(body)),
                    description=description)
     snip.u_options = u_options
     snip.u_context = context
-    print(snip)
     return snip
 
+
 def build(snip):
-    return snip
+    if snip.description != '':
+        head = 'snippet %s "%s"\n' % (snip.name, snip.description)
+    else:
+        head = 'snippet %s\n' % snip.name
+    body = build_body(snip.body)
+    return head + body + "\nendsnippet"
+
+def build_body(body):
+    return body
 

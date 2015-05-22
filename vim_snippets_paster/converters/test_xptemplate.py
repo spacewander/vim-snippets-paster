@@ -139,7 +139,6 @@ def test_include_exception():
         parse(include_snippet.split('\n'), ct)
 
 filehead_snippet = """XPT filehead
-XSET cursor|pre=CURSOR
 @since : `strftime("%Y %b %d")^"""
 
 filehead_snippet_after = '@since : `strftime("%Y %b %d")`'
