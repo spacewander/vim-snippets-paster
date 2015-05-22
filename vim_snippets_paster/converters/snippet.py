@@ -10,7 +10,7 @@ class Snippet(object):
     Notice: this object is just a container,
     don't add any methods which will change the inside value to it.
     """
-    def __init__(self, type, name, body, description):
+    def __init__(self, type, name, body, description=''):
         """
         :type           one in ['snipmate', 'ultisnips', 'xptemplate']
         :name           the name(trigger) of snippet

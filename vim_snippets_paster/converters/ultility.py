@@ -1,3 +1,5 @@
+import re
+
 class NotImplementFeatureException(Exception):
     """an Exception used in parsing"""
     def __init__(self, msg='', feature=None):
@@ -19,4 +21,6 @@ class UnsupportFeatureException(Exception):
 
     def __str__(self):
         return self.message
+
+embeded = re.compile('`(.*?)`')
 
