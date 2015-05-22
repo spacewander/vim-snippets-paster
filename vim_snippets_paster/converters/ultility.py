@@ -24,3 +24,8 @@ class UnsupportFeatureException(Exception):
 
 embeded = re.compile('`(.*?)`')
 
+def format_placeholders(lines):
+    """convert ${0} and ${VISUAL} to $0 and $VISUAL"""
+    return [line.replace('${0}', '$0').replace('${VISUAL}', '$VISUAL') \
+            for line in lines]
+

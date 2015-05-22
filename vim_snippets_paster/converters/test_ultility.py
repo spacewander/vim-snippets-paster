@@ -1,4 +1,5 @@
-from .ultility import NotImplementFeatureException, UnsupportFeatureException
+from .ultility import (NotImplementFeatureException, UnsupportFeatureException,
+                       format_placeholders)
 
 def test_not_implement_feature_exception():
     try:
@@ -19,4 +20,8 @@ def test_unsupport_feature_exception():
         raise UnsupportFeatureException(feature="some")
     except UnsupportFeatureException as e:
         assert e.message == '%s is unsupport' % 'some'
+
+def test_format_placeholders():
+    lines = ["it is ${VISUAL}", 'and ${0}']
+    assert format_placeholders(lines) == ["it is $VISUAL", 'and $0']
 
