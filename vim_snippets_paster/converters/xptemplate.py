@@ -143,7 +143,7 @@ class XptemplateParser(object):
         if value == self.visual:
             if placeholder != '':
                 return "${VISUAL:%s}" % placeholder
-            return "${VISUAL}"
+            return "$VISUAL"
 
         if value in PREDEFINED_VALUE:
             return PREDEFINED_VALUE[value]
