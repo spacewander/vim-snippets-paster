@@ -1,7 +1,8 @@
 import pytest
 
+from .snippet import Snippet
 from .ultility import NotImplementFeatureException
-from .xptemplate import parse
+from .xptemplate import parse, build
 
 if_snippet = """XPT if
 if`$SPcmd^(`$SParg^`condition^`$SParg^)`$BRif^{
@@ -34,7 +35,7 @@ call_snippet = """XPT call wraponly=param " ..( .. )
 call_snippet_wraponly = """XPT call wraponly=param " ..( .. )
 `name^(`$SParg^`param^`$SParg^)"""
 
-call_snippet_after = """${1:name}( ${VISUAL} )"""
+call_snippet_after = """${1:name}( $VISUAL )"""
 
 fcomment_snippet = """XPT fcomment
 /**
@@ -146,3 +147,24 @@ filehead_snippet_after = '@since : `strftime("%Y %b %d")`'
 def test_vimscript_filter():
     assert get_parsed_body(filehead_snippet) == filehead_snippet_after
 
+if_snippet_obj = Snippet('ultisnips', name='if',
+                    body='if ...', description='if snippet')
+
+if_snippet_obj_after = """XPT if "if snippet
+if ...
+...XPT"""
+
+def test_build():
+    assert build(if_snippet_obj) == if_snippet_obj_after
+
+def get_built_body(snippet):
+    return "\n".join(build(snippet).splitlines()[1:-1])
+
+def test_convert_author_and_email():
+    user_snippet_obj = Snippet('ultisnips', name='user',
+                            body='`$author`\'s `$email`')
+    assert get_built_body(user_snippet_obj) == '`$author^\'s `$email^'
+
+def test_convert_viml_code():
+    viml_snippet_obj = Snippet('ultisnips', name='viml', body='`echom`')
+    assert get_built_body(viml_snippet_obj) == '`echom^'

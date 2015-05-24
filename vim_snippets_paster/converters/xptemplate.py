@@ -1,7 +1,8 @@
 import re
 
 from .snippet import Snippet
-from .ultility import NotImplementFeatureException
+from .ultility import (NotImplementFeatureException,
+                       UnsupportFeatureException, embeded)
 
 PREDEFINED_VALUE = {
     '$SParg':   ' ',
@@ -184,5 +185,33 @@ class XptemplateParser(object):
 
 
 def build(snip):
-    return snip
+    if len(snip.name.split()) > 1:
+        raise UnsupportFeatureException(
+            "xptemplate doesn't allow whitespace in snippet trigger")
+    head = 'XPT %s' % snip.name
+    builder = XptemplateBuilder(snip)
+    if builder.hasWrap:
+        head += " wrap=%s" % builder.wrap
+    if snip.description != '':
+        head += ' "%s' % snip.description
+    return head + '\n' + builder.body + '\n...XPT'
 
+class XptemplateBuilder(object):
+    def __init__(self, snippet):
+        self.body = snippet.body
+        self.hasWrap = False
+        self.convert_embeded_variables()
+        self.convert_placeholders()
+
+    def convert_embeded_variables(self):
+        def handle_embeded_variable(match):
+            value = match.group(1)
+            if value == '$author':
+                return '`$author^'
+            if value == '$email':
+                return '`$email^'
+            return '`%s^' % value
+        self.body = re.sub(embeded, handle_embeded_variable, self.body)
+
+    def convert_placeholders(self):
+        pass
