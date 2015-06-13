@@ -1,0 +1,175 @@
+## Control Statements
+snippet if
+if (${1:true}) {
+    $0
+}
+endsnippet
+
+snippet ife
+if (${1:true}) {
+    ${2}
+} else {
+    $0
+}
+endsnippet
+
+snippet el
+else {
+    $0
+}
+endsnippet
+
+snippet elif
+else if (${1:true}) {
+    $0
+}
+endsnippet
+
+snippet ifi
+if (${1:true}) $0;
+endsnippet
+
+snippet t
+${1:/* condition */} ? ${2:a} : ${3:b}
+endsnippet
+
+snippet switch
+switch (${1:/* variable */}) {
+    case ${2:/* variable case */}:
+        ${3}
+        ${4:break;}${5}
+    default:
+        ${6}
+}
+endsnippet
+
+snippet switchndef
+switch (${1:/* variable */}) {
+    case ${2:/* variable case */}:
+        ${3}
+        ${4:break;}${5}
+}
+endsnippet
+
+snippet case
+case ${1:/* variable case */}:
+    ${2}
+    ${3:break;}
+endsnippet
+## Loops
+
+snippet for
+for (${2:i} = 0; $2 < ${1:count}; $2${3:++}) {
+    ${4}
+}
+endsnippet
+
+snippet forr
+for (${1:i} = ${2:0}; ${3:$1 < 10}; $1${4:++}) {
+    ${5}
+}
+endsnippet
+
+snippet wh
+while (${1:/* condition */}) {
+    ${2}
+}
+endsnippet
+
+snippet do
+do {
+    ${2}
+} while (${1:/* condition */});
+endsnippet
+## Functions
+
+snippet fun
+${1:void} ${2:function_name}(${3})
+{
+    ${4}
+}
+endsnippet
+## Types
+snippet td
+typedef ${1:int} ${2:MyCustomType};
+endsnippet
+
+#Filename is not implemented
+#snippet st struct
+#    struct ${1:`vim_snippets#Filename('$1_t', 'name')`} {
+#        ${2:/* data */}
+#    }${3: /* optional variable list */};
+
+
+snippet tde "typedef enum"
+typedef enum {
+    ${1:/* data */}
+} ${2:foo};
+endsnippet
+## Input/Output
+
+snippet pr "printf"
+printf("${1:%s}\n"${2});
+endsnippet
+
+snippet fpr
+fprintf(${1:stderr}, "${2:%s}\n"${3});
+endsnippet
+
+snippet getopt "getopt"
+int choice;
+while (1)
+{
+    static struct option long_options[] =
+    {
+        /* Use flags like so:
+        {"verbose", no_argument,    &verbose_flag, 'V'}*/
+        /* Argument styles: no_argument, required_argument, optional_argument */
+        {"version", no_argument,    0,  'v'},
+        {"help",    no_argument,    0,  'h'},
+        ${1}
+        {0,0,0,0}
+    };
+
+    int option_index = 0;
+
+    /* Argument parameters:
+        no_argument: " "
+        required_argument: ":"
+        optional_argument: "::" */
+
+    choice = getopt_long( argc, argv, "vh",
+                long_options, &option_index);
+
+    if (choice == -1)
+        break;
+
+    switch( choice )
+    {
+        case 'v':
+            ${2}
+            break;
+
+        case 'h':
+            ${3}
+            break;
+
+        case '?':
+            /* getopt_long will have already printed an error */
+            break;
+
+        default:
+            /* Not sure how to get here... */
+            return EXIT_FAILURE;
+    }
+}
+
+/* Deal with non-option arguments here */
+if ( optind < argc )
+{
+    while ( optind < argc )
+    {
+        $0
+    }
+}
+endsnippet

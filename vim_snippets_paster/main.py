@@ -30,13 +30,14 @@ def main(argv=None):
         exit_with_msg('miss output snippet type')
 
     with open(arg[0]) as f:
-        snippet = f.read().split('\n')
+        snippet = f.read().splitlines()
     res = paste(opt.src_type, opt.dest_type, snippet)
     return res
 
 def paste(src, dest, snippet):
     # snippet is the list of lines of snippet content
     try:
+        # use AttributeError to limit type input
         converter = getattr(converters, 'convert_%s_to_%s' % (src, dest))
     except AttributeError:
         if src == dest:
@@ -44,7 +45,7 @@ def paste(src, dest, snippet):
             raise ValueError(msg)
         raise ValueError("unsupport snippet type detected")
 
-    paster = getattr(pasters, 'paste_%s' % dest)
+    paster = pasters.make_paster(src, dest)
     output = getattr(scissors, 'cut_%s' % src)(snippet, converter, paster)
     return output
 
