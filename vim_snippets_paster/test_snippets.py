@@ -9,7 +9,7 @@ def test_snipmate2ultisnips():
     with open(os.path.join(snippte_dir, 'in.snipmate')) as f:
         snipmate_snippet = f.read().splitlines()
     snippet = paste('snipmate', 'ultisnips', snipmate_snippet)
-    with open(os.path.join(snippte_dir, 'out.ultisnips')) as f:
+    with open(os.path.join(snippte_dir, 'out_snipmate.ultisnips')) as f:
         ultisnips_snippet = f.read().rstrip()
     assert snippet == ultisnips_snippet
 

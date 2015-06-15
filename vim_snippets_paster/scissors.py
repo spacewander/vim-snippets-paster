@@ -22,7 +22,7 @@ def cut_snipmate(snippet, convert, paste):
             end = linum
             in_snip = True
             # cut non-snippet text
-            texts.append(paste(snippet[begin:end]))
+            texts.append(paste(snippet[begin:end], context))
             begin = end
         elif in_snip is True and re.match(begin_without_indent, line):
             end = linum
@@ -38,7 +38,7 @@ def cut_snipmate(snippet, convert, paste):
     if in_snip is True:
         texts.append(convert(snippet[begin:], context))
     else:
-        texts.append(paste(snippet[begin:]))
+        texts.append(paste(snippet[begin:], context))
     return "\n".join(texts)
 
 def cut_ultisnips(snippet, convert, paste):
@@ -59,7 +59,7 @@ def cut_ultisnips(snippet, convert, paste):
             end = linum
             in_snip = True
             # cut non-snippet text
-            texts.append(paste(snippet[begin:end]))
+            texts.append(paste(snippet[begin:end], context))
             begin = end
         elif in_snip is True and line.startswith('endsnippet'):
             end = linum
@@ -69,7 +69,7 @@ def cut_ultisnips(snippet, convert, paste):
             begin = end + 1
 
     if in_snip is False:
-        texts.append(paste(snippet[begin:]))
+        texts.append(paste(snippet[begin:], context))
     return "\n".join(texts)
 
 def cut_xptemplate(snippet, convert, paste):
@@ -118,7 +118,7 @@ def cut_xptemplate(snippet, convert, paste):
             end = linum
             in_snip = True
             # cut non-snippet text
-            texts.append(paste(snippet[begin:end]))
+            texts.append(paste(snippet[begin:end], context))
             begin = end
         elif in_snip is True:
             if line.startswith('..XPT'):
@@ -135,6 +135,6 @@ def cut_xptemplate(snippet, convert, paste):
     if in_snip is True:
         texts.append(convert(snippet[begin:last_nonempty_line+1], context))
     else:
-        texts.append(paste(snippet[begin:]))
+        texts.append(paste(snippet[begin:], context))
     return "\n".join(texts)
 

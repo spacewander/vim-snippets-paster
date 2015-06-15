@@ -20,6 +20,38 @@ def convert(src, dest, input, ct):
     and build it back to text according to dest type.
 
     :ct     the global context needed in parsing
+
+    Feature:
+    snipmate:
+        * special variable, like g:snips_author
+        * mirror
+        * transformations
+        * vimscript evalution
+        * tab stop(${1:xxx}, $0, and so on)
+        * VISUAL stop(${VISUAL:blah})
+        * snippet description
+    ultisnips:
+        * special variable, like $author, $email
+        * mirror
+        * transformations
+        * evalution(vimscript, shell, python)
+        * tab stop
+        * VISUAL stop
+        * snippet description
+        * snippet trigger can contain whitespace
+        * snippet options
+        * snippet context
+    xptemplate:
+        * special variable, like $author, $email
+        * variable
+        * snippet description
+        * vimscript evalution
+        * attributes(hint/hidden/alias/wrap/...)
+        * included snippet
+        * XSET
+
+    If a feature is not implemented, the relative part will be commented.
+    (A feature not implemented is a feature only supported by given src type)
     """
     try:
         if src == 'snipmate':
@@ -48,6 +80,13 @@ def convert(src, dest, input, ct):
 
 
 def build(snippet, dest):
+    """
+    Build a snippet of dest type from a Snippet object constructed from snippet
+    text of src type.
+
+    If a feature is unsupport, return commented snippet text.
+    (A unsupport feature is a feature not supported by dest type)
+    """
     try:
         if dest == 'snipmate':
             return snipmate.build(snippet)
