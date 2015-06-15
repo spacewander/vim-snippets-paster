@@ -1,3 +1,6 @@
+# Take and cut from
+# https://github.com/honza/vim-snippets/blob/master/snippets/c.snippets
+
 ## Control Statements
 snippet if
     if (${1:true}) {
