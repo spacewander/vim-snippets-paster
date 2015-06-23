@@ -19,6 +19,7 @@ def convert(src, dest, input, ct):
     convert input text into a snippet instance according to src type,
     and build it back to text according to dest type.
 
+    :input  a list of lines
     :ct     the global context needed in parsing
 
     Feature:
@@ -52,6 +53,8 @@ def convert(src, dest, input, ct):
 
     If a feature is not implemented, the relative part will be commented.
     (A feature not implemented is a feature only supported by given src type)
+    If a feature is unsupport, return commented snippet text.
+    (A unsupport feature is a feature not supported by dest type)
     """
     try:
         if src == 'snipmate':
@@ -66,8 +69,8 @@ def convert(src, dest, input, ct):
             # there may be no, one, or multiple parsed results
             return "\n\n".join(build(s, dest) for s in snips)
 
-    except NotImplementFeatureException as e:
-        if src == 'xptemplate':
+    except (NotImplementFeatureException, UnsupportFeatureException) as e:
+        if dest == 'xptemplate':
             comment = '"'
         else:
             comment = '#'
@@ -83,24 +86,11 @@ def build(snippet, dest):
     """
     Build a snippet of dest type from a Snippet object constructed from snippet
     text of src type.
-
-    If a feature is unsupport, return commented snippet text.
-    (A unsupport feature is a feature not supported by dest type)
     """
-    try:
-        if dest == 'snipmate':
-            return snipmate.build(snippet)
-        elif dest == 'ultisnips':
-            return ultisnips.build(snippet)
-        elif dest == 'xptemplate':
-            return xptemplate.build(snippet)
-    except UnsupportFeatureException as e:
-        if src == 'xptemplate':
-            comment = '"'
-        else:
-            comment = '#'
-        output = "%s%s\n" % (comment, e)
-        for line in input:
-            output += "%s%s\n" % (comment, line)
-        return output
+    if dest == 'snipmate':
+        return snipmate.build(snippet)
+    elif dest == 'ultisnips':
+        return ultisnips.build(snippet)
+    elif dest == 'xptemplate':
+        return xptemplate.build(snippet)
 

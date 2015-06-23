@@ -35,7 +35,20 @@ def paste(src, dest, input, ct):
         line = line.lstrip()
         if line.startswith(old_comment):
             if new_comment != old_comment:
-                line[0] = new_comment
+                # Sometimes there is comment art in the snippet, like:
+                # ######################
+                # ##  snippet for C   ##
+                # ######################
+                #
+                # Should I convert to something like:
+                # """"""""""""""""""""""
+                # ""  snippet for C   ""
+                # """"""""""""""""""""""
+                comment_len = 1
+                line_len = len(line)
+                while comment_len < line_len and line[comment_len] == old_comment:
+                    comment_len += 1
+                line = new_comment * comment_len + line[comment_len:]
             output.append(line)
         elif line == '':
             output.append(line)

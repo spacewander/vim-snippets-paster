@@ -1,8 +1,20 @@
 from .pasters import paste
 
-extends = "extends html, css"
+def test_convert_comment():
+    lines = ["# This is a comment"]
+    assert paste('ultisnips', 'xptemplate', lines, {}) == '" This is a comment'
+    assert paste('xptemplate', 'ultisnips', lines, {}) == ''
+    assert paste('snipmate', 'ultisnips', lines, {}) == lines[0]
+
+    lines = ["## This is also a comment"]
+    assert paste('ultisnips', 'xptemplate', lines, {}) == \
+            '"" This is also a comment'
+    lines = ['" Test with more comment']
+    assert paste('xptemplate', 'snipmate', lines, {}) == \
+            '# Test with more comment'
 
 def test_extends():
+    extends = "extends html, css"
     lines = [extends]
     assert paste('snipmate', 'ultisnips', lines, {}) == extends
     assert paste('snipmate', 'xptemplate', lines, {}) == ''
