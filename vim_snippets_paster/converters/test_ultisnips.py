@@ -1,8 +1,8 @@
 import pytest
 
 from .snippet import Snippet
-from .ultisnips import (handle_embeded_variables,
-                        parse, build, convert_embeded_variables)
+from .ultisnips import (parse_embeded_variables,
+                        parse, build, build_embeded_variables)
 from .ultility import NotImplementFeatureException
 
 author = "who is `g:snips_author`"
@@ -11,31 +11,31 @@ email = "what is `g:snips_author_email`"
 email_body = "what is `$email`"
 
 def test_author():
-    assert handle_embeded_variables(author) == author_body
+    assert parse_embeded_variables(author) == author_body
 
 def test_email():
-    assert handle_embeded_variables(email) == email_body
+    assert parse_embeded_variables(email) == email_body
 
 
-def test_convert_author():
-    assert convert_embeded_variables(author_body) == author
+def test_build_author():
+    assert build_embeded_variables(author_body) == author
 
-def test_convert_email():
-    assert convert_embeded_variables(email_body) == email
+def test_build_email():
+    assert build_embeded_variables(email_body) == email
 
 def test_embed_sh_code():
     with pytest.raises(NotImplementFeatureException):
-        handle_embeded_variables('`ls -l`')
+        parse_embeded_variables('`ls -l`')
 
 def test_embed_py_code():
     with pytest.raises(NotImplementFeatureException):
-        handle_embeded_variables('`!p snip.rv = (75-2*len(t[1]))*' '`')
+        parse_embeded_variables('`!p snip.rv = (75-2*len(t[1]))*' '`')
 
 def test_embed_viml_code():
-    assert handle_embeded_variables('`!v indent(".")`') == '`indent(".")`'
+    assert parse_embeded_variables('`!v indent(".")`') == '`indent(".")`'
 
-def test_convert_viml_code():
-    assert convert_embeded_variables('`indent(".")`') == '`!v indent(".")`'
+def test_build_viml_code():
+    assert build_embeded_variables('`indent(".")`') == '`!v indent(".")`'
 
 normal_snippet = """snippet t
 true ${VISUAL}

@@ -17,7 +17,8 @@ def handle_Filename(match):
 def preproccess_vimscript(lines):
     return [re.sub(embeded, handle_Filename, line) for line in lines]
 
-def handle_embeded_variables(body):
+def parse_embeded_variables(body):
+    """deal with embeded variables in parse setup"""
     def handle_embeded_variable(match):
         value = match.group(1)
         if value == 'g:snips_author':
@@ -48,7 +49,7 @@ def parse(input, ct):
     body = '\n'.join(reduce(lambda x, f: f(x), body_filters, input[1:]))
 
     snip = Snippet('snipmate', snip_name,
-                   body=handle_embeded_variables(body),
+                   body=parse_embeded_variables(body),
                    description=description)
     return snip
 
@@ -62,10 +63,11 @@ def build(snip):
     return head + body
 
 def build_body(body):
-    fs = [convert_embeded_variables, convert_placeholders, append_indent]
+    fs = [build_embeded_variables, convert_placeholders, append_indent]
     return reduce(lambda x, f: f(x), fs, body)
 
-def convert_embeded_variables(body):
+def build_embeded_variables(body):
+    """deal with embeded variables in build setup"""
     def handle_embeded_variable(match):
         value = match.group(1)
         if value == '$author':

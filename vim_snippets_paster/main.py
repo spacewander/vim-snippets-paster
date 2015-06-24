@@ -46,6 +46,6 @@ def paste(src, dest, snippet):
         raise ValueError("unsupport snippet type detected")
 
     paster = pasters.make_paster(src, dest)
-    output = getattr(scissors, 'cut_%s' % src)(snippet, converter, paster)
-    return output
+    cutter = scissors.make_cutter(src)
+    return paster(converter, cutter(snippet)).rstrip()
 

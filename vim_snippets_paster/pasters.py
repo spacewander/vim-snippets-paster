@@ -1,8 +1,50 @@
 def make_paster(src, dest):
-    """to make creating function in loop possible"""
-    return lambda input, ct: paste(src, dest, input, ct)
+    return lambda converter, texts: paste(src, dest, converter, texts)
 
-def paste(src, dest, input, ct):
+def paste(src, dest, converter, texts):
+    """
+    handle texts in this format:
+    [('others', text0), ('snippet', text1), ...]
+
+    Use paste_non_snippets to handle text with 'others' tag,
+    use converter to handle text with 'snippet' tag.
+    Then paste all results into the final snippet.
+    """
+    output = []
+    ct = {}
+    if src == 'snipmate':
+        for tag, text in texts:
+            if tag == 'others':
+                output.append(paste_non_snippets(src, dest, text, ct))
+            elif tag == 'snippet':
+                output.append(converter(text, ct) + '\n') # for a pretty output
+    else:
+        for tag, text in texts:
+            if tag == 'others':
+                output.append(paste_non_snippets(src, dest, text, ct))
+            elif tag == 'snippet':
+                output.append(converter(text, ct))
+
+    # if the first part is wrapped with comment, insert the header after it
+    if dest == 'snipmate':
+        header = 'version 1'
+        if output[0][0] == '#':
+            return output[0] + '\n' + header + '\n\n' + '\n'.join(output[1:])
+        else:
+            return header + '\n\n' + '\n'.join(output)
+    elif dest == 'xptemplate':
+        if 'priority' in ct:
+            header = ct['priority']
+        else:
+            header = 'XPTemplate priority=lang'
+        if output[0][0] == '"':
+            return output[0] + '\n' + header + '\n\n' + '\n'.join(output[1:])
+        else:
+            return header + '\n\n' + '\n'.join(output)
+    else:
+        return "\n".join(output)
+
+def paste_non_snippets(src, dest, text, ct):
     """
     paste non-snippets contents.
 
@@ -31,7 +73,7 @@ def paste(src, dest, input, ct):
         new_comment = '#'
 
     output = []
-    for line in input:
+    for line in text:
         line = line.lstrip()
         if line.startswith(old_comment):
             if new_comment != old_comment:
@@ -57,15 +99,14 @@ def paste(src, dest, input, ct):
                 if dest in ('snipmate', 'ultisnips'):
                     output.append(line)
             elif line.startswith('priority ') and dest == 'xptemplate' and \
-                    not 'has_priority' in ct:
-                ct['has_priority'] = True
+                    not 'priority' in ct:
                 priority = int(line.split(' ', 1)[1].strip())
-                output.append(u_priority_to_xp(priority))
+                ct['priority'] = u_priority_to_xp(priority)
             elif line.startswith('XPTemplate ') and dest == 'ultisnips' and \
-                    not 'has_priority' in ct:
+                    not 'priority' in ct:
                 for pair in line.split():
                     if pair.startswith('priority='):
-                        ct['has_priority'] = True
+                        ct['priority'] = True
                         priority = xp_priority_to_u(pair.partition('=')[2])
                         # 0 is default, no need to define
                         if priority != 'priority 0':

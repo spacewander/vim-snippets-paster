@@ -59,6 +59,7 @@ case ${1:/* variable case */}:
     ${2}
     ${3:break;}
 endsnippet
+
 ## Loops
 
 snippet for
@@ -84,6 +85,7 @@ do {
     ${2}
 } while (${1:/* condition */});
 endsnippet
+
 ## Functions
 
 snippet fun
@@ -92,6 +94,7 @@ ${1:void} ${2:function_name}(${3})
     ${4}
 }
 endsnippet
+
 ## Types
 snippet td
 typedef ${1:int} ${2:MyCustomType};
@@ -109,6 +112,7 @@ typedef enum {
     ${1:/* data */}
 } ${2:foo};
 endsnippet
+
 ## Input/Output
 
 snippet pr "printf"
@@ -176,3 +180,4 @@ if ( optind < argc )
     }
 }
 endsnippet
+

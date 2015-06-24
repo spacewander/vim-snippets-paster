@@ -1,7 +1,8 @@
+import re
+
 from . import convert
-from .snippet import Snippet
 from .ultility import (NotImplementFeatureException, UnsupportFeatureException,
-                       format_placeholders)
+                       format_placeholders, embeded)
 
 def test_not_implement_feature_exception():
     try:
@@ -47,4 +48,15 @@ endsnippet""".splitlines()
     '"xptemplate doesn\'t allow whitespace in snippet trigger',
     '"snippet "white space"',
     '"endsnippet'])
+
+def test_find_multiline_embeded_variable():
+    multiline_embeded_variable = """
+    ifndef ${1:`!p
+if not snip.c:
+    name = re.sub(r'[^A-Za-z0-9]+','_', snip.fn).upper()
+    `}
+    #define $1"""
+    assert re.sub(embeded, '', multiline_embeded_variable) == """
+    ifndef ${1:}
+    #define $1"""
 

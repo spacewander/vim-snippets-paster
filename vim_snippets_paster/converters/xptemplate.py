@@ -81,7 +81,7 @@ class XptemplateParser(object):
         else:
             self.visual = None
 
-        # not implemented for XSET and XSETm yet, just ignore them
+        # TODO not implemented for XSET and XSETm yet, just ignore them
         body_lines = []
         fitered_xset_body = [l for l in input[1:] if not l.startswith('XSET ')]
         in_XSETm = False

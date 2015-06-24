@@ -1,6 +1,6 @@
 import pytest
 
-from .snipmate import parse, build, convert_embeded_variables
+from .snipmate import parse, build, build_embeded_variables
 from .snippet import Snippet
 from .ultility import NotImplementFeatureException, UnsupportFeatureException
 
@@ -46,12 +46,12 @@ def test_whitespace_name():
     with pytest.raises(UnsupportFeatureException):
         build(whitespace_snippet)
 
-def test_convert_author():
+def test_handle_author_in_build():
     author_body = "who is `$author`"
-    assert convert_embeded_variables(author_body) == "who is `g:snips_author`"
+    assert build_embeded_variables(author_body) == "who is `g:snips_author`"
 
-def test_convert_email():
+def test_handle_email_in_build():
     email_body = "what is `$email`"
     with pytest.raises(UnsupportFeatureException):
-        convert_embeded_variables(email_body)
+        build_embeded_variables(email_body)
 

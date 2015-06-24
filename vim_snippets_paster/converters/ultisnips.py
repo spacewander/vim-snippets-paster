@@ -12,7 +12,8 @@ def preprocess_with_options(lines, options):
         for line in lines:
             line = line.rstrip()
 
-def handle_embeded_variables(body):
+def parse_embeded_variables(body):
+    """deal with embeded variables in parse setup"""
     def handle_embeded_variable(match):
         value = match.group(1)
         if value == 'g:snips_author':
@@ -79,7 +80,7 @@ def parse(input, ct):
     body = format_placeholders(input[1:-1])
     preprocess_with_options(body, u_options)
     snip = Snippet('ultisnips', snip_name,
-                   body=handle_embeded_variables('\n'.join(body)),
+                   body=parse_embeded_variables('\n'.join(body)),
                    description=description)
     snip.u_options = u_options
     snip.u_context = context
@@ -95,9 +96,10 @@ def build(snip):
     return head + body + "\nendsnippet"
 
 def build_body(body):
-    return convert_embeded_variables(body)
+    return build_embeded_variables(body)
 
-def convert_embeded_variables(body):
+def build_embeded_variables(body):
+    """deal with embeded variables in build step"""
     def handle_embeded_variable(match):
         value = match.group(1)
         if value == '$author':

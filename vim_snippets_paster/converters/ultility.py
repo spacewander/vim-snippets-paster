@@ -22,7 +22,7 @@ class UnsupportFeatureException(Exception):
     def __str__(self):
         return self.message
 
-embeded = re.compile('`(.*?)`')
+embeded = re.compile('`(.*?)`', re.MULTILINE | re.DOTALL)
 
 def format_placeholders(lines):
     """convert ${0} and ${VISUAL} to $0 and $VISUAL"""
