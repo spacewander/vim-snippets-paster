@@ -1,6 +1,7 @@
 import pytest
 
-from .snipmate import parse, build, build_embeded_variables
+from .snipmate import (parse, build, parse_placeholders,
+        build_embeded_variables)
 from .snippet import Snippet
 from .ultility import NotImplementFeatureException, UnsupportFeatureException
 
@@ -54,4 +55,9 @@ def test_handle_email_in_build():
     email_body = "what is `$email`"
     with pytest.raises(UnsupportFeatureException):
         build_embeded_variables(email_body)
+
+def test_transform_not_implemented():
+    transform_body = "${1/foo/bar}"
+    with pytest.raises(NotImplementFeatureException):
+        parse_placeholders(transform_body)
 

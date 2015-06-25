@@ -23,6 +23,8 @@ class UnsupportFeatureException(Exception):
         return self.message
 
 embeded = re.compile('`(.*?)`', re.MULTILINE | re.DOTALL)
+placeholder = re.compile('\${(.*?)}', re.MULTILINE | re.DOTALL)
+transformation = re.compile('\${(\d+/.*?)}', re.MULTILINE | re.DOTALL)
 
 def format_placeholders(lines):
     """convert ${0} and ${VISUAL} to $0 and $VISUAL"""

@@ -1,5 +1,6 @@
 import re
 
+from . import ultility
 from .snippet import Snippet
 from .ultility import (format_placeholders, NotImplementFeatureException,
                        embeded)
@@ -12,6 +13,13 @@ def preprocess_with_options(lines, options):
         for line in lines:
             line = line.rstrip()
 
+def parse_placeholders(body):
+    if re.search(ultility.transformation, body) is not None:
+        raise NotImplementFeatureException("""
+        ultisnips use python's regex syntax to transform variable,
+        you may need to look up the docs and convert the transform syntax.""")
+    return body
+
 def parse_embeded_variables(body):
     """deal with embeded variables in parse setup"""
     def handle_embeded_variable(match):
@@ -20,9 +28,9 @@ def parse_embeded_variables(body):
             return '`$author`'
         if value == 'g:snips_author_email':
             return '`$email`'
-        if value.startswith('!p '):
+        if value.startswith('!p'):
             raise NotImplementFeatureException(feature='embed python code')
-        if value.startswith('!v '):
+        if value.startswith('!v'):
             return '`%s`' % value[3:]
         raise NotImplementFeatureException(feature='embed shell code')
 
@@ -80,7 +88,8 @@ def parse(input, ct):
     body = format_placeholders(input[1:-1])
     preprocess_with_options(body, u_options)
     snip = Snippet('ultisnips', snip_name,
-                   body=parse_embeded_variables('\n'.join(body)),
+                   body=parse_placeholders(
+                       parse_embeded_variables('\n'.join(body))),
                    description=description)
     snip.u_options = u_options
     snip.u_context = context

@@ -1,7 +1,7 @@
 import pytest
 
 from .snippet import Snippet
-from .ultisnips import (parse_embeded_variables,
+from .ultisnips import (parse_embeded_variables, parse_placeholders,
                         parse, build, build_embeded_variables)
 from .ultility import NotImplementFeatureException
 
@@ -101,4 +101,9 @@ endsnippet"""
 
 def test_build():
     assert build(build_snippet) == build_snippet_after
+
+def test_transform_not_implemented():
+    transform_body = "${1/\w+\s*/$0/}"
+    with pytest.raises(NotImplementFeatureException):
+        parse_placeholders(transform_body)
 

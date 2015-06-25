@@ -74,7 +74,10 @@ def convert(src, dest, input, ct):
             comment = '"'
         else:
             comment = '#'
-        output = "%s%s\n" % (comment, e)
+        output = ''
+        for line in e.message.splitlines():
+            if line != '':
+                output += "%s%s\n" % (comment, line.lstrip())
         for line in input:
             output += "%s%s\n" % (comment, line)
         return output

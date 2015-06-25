@@ -1,8 +1,8 @@
 import re
 
-from . import convert
 from .ultility import (NotImplementFeatureException, UnsupportFeatureException,
                        format_placeholders, embeded)
+from . import convert, ultility
 
 def test_not_implement_feature_exception():
     try:
@@ -59,4 +59,19 @@ if not snip.c:
     assert re.sub(embeded, '', multiline_embeded_variable) == """
     ifndef ${1:}
     #define $1"""
+
+def test_find_multiline_placeholder():
+    multiline_placeholder = """
+    #if 0
+    ${1:#pragma mark -
+    }#pragma mark $2
+    #endif"""
+    assert re.sub(ultility.placeholder, '', multiline_placeholder) == """
+    #if 0
+    #pragma mark $2
+    #endif"""
+
+def test_find_tranformation():
+    transformation = """#ifndef ${12/([A-Za-z0-9_]+).*/$1/g}"""
+    assert re.sub(ultility.transformation, '', transformation) == "#ifndef "
 

@@ -25,10 +25,12 @@ def paste(src, dest, converter, texts):
             elif tag == 'snippet':
                 output.append(converter(text, ct))
 
+    if len(output) == 0:
+        return ''
     # if the first part is wrapped with comment, insert the header after it
     if dest == 'snipmate':
         header = 'version 1'
-        if output[0][0] == '#':
+        if len(output[0]) != 0 and output[0][0] == '#':
             return output[0] + '\n' + header + '\n\n' + '\n'.join(output[1:])
         else:
             return header + '\n\n' + '\n'.join(output)
@@ -37,7 +39,7 @@ def paste(src, dest, converter, texts):
             header = ct['priority']
         else:
             header = 'XPTemplate priority=lang'
-        if output[0][0] == '"':
+        if len(output[0]) != 0 and output[0][0] == '"':
             return output[0] + '\n' + header + '\n\n' + '\n'.join(output[1:])
         else:
             return header + '\n\n' + '\n'.join(output)
