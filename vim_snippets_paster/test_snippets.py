@@ -1,3 +1,4 @@
+import difflib
 import os.path
 
 from .main import paste
@@ -11,7 +12,13 @@ def assert_snippet_equal(from_type, to_type):
     snippet = paste(from_type, to_type, from_snippet)
     with open(os.path.join(snippte_dir, 'out_%s.%s' % (from_type, to_type))) as f:
         to_snippet = f.read().rstrip()
-    assert snippet == to_snippet
+    if snippet != to_snippet:
+        print('out_%s.%s changed' % (from_type, to_type))
+        print('\n'.join(difflib.unified_diff(to_snippet.splitlines(),
+            snippet.splitlines())))
+        assert False
+    else:
+        assert True
 
 def test_snipmate2ultisnips():
     assert_snippet_equal('snipmate', 'ultisnips')

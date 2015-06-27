@@ -58,7 +58,7 @@ def test_parse():
     snippet = parse_snippet(normal_snippet)
     assert snippet.name == 't'
     assert snippet.description == ''
-    assert snippet.body == 'true $VISUAL'
+    assert snippet.body == 'true ${VISUAL}'
 
 def test_description():
     snippet = parse_snippet(if_snippet)

@@ -2,7 +2,7 @@ import pytest
 
 from .snippet import Snippet
 from .ultility import NotImplementFeatureException
-from .xptemplate import parse, build
+from .xptemplate import parse, build, XptemplateBuilder
 
 if_snippet = """XPT if
 if`$SPcmd^(`$SParg^`condition^`$SParg^)`$BRif^{
@@ -168,3 +168,15 @@ def test_convert_author_and_email():
 def test_convert_viml_code():
     viml_snippet_obj = Snippet('ultisnips', name='viml', body='`echom`')
     assert get_built_body(viml_snippet_obj) == '`echom^'
+
+def wrap_body_to_object(snippet_body):
+    return Snippet('ultisnips', name='some', body=snippet_body)
+
+placeholders_body = """${1:some} ${1} ${2} ${0:one} ${3} ${4}${VISUAL:else}"""
+
+def test_convert_placeholders():
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body))
+    assert builder.hasWrap
+    assert builder.wrap == 'else'
+    assert builder.body == "`some^ `some^ `i^ `cursor^ `j^ `k^`else^"
+

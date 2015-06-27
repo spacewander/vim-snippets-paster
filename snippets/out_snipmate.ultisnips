@@ -4,7 +4,7 @@
 ## Control Statements
 snippet if
 if (${1:true}) {
-    $0
+    ${0}
 }
 endsnippet
 
@@ -12,24 +12,24 @@ snippet ife
 if (${1:true}) {
     ${2}
 } else {
-    $0
+    ${0}
 }
 endsnippet
 
 snippet el
 else {
-    $0
+    ${0}
 }
 endsnippet
 
 snippet elif
 else if (${1:true}) {
-    $0
+    ${0}
 }
 endsnippet
 
 snippet ifi
-if (${1:true}) $0;
+if (${1:true}) ${0};
 endsnippet
 
 snippet t
@@ -63,13 +63,13 @@ endsnippet
 ## Loops
 
 snippet for
-for (${2:i} = 0; $2 < ${1:count}; $2${3:++}) {
+for (${2:i} = 0; ${2} < ${1:count}; ${2}${3:++}) {
     ${4}
 }
 endsnippet
 
 snippet forr
-for (${1:i} = ${2:0}; ${3:$1 < 10}; $1${4:++}) {
+for (${1:i} = ${2:0}; ${3:${1} < 10}; ${1}${4:++}) {
     ${5}
 }
 endsnippet
@@ -176,7 +176,7 @@ if ( optind < argc )
 {
     while ( optind < argc )
     {
-        $0
+        ${0}
     }
 }
 endsnippet

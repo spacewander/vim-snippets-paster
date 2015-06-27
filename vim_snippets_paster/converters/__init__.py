@@ -96,4 +96,3 @@ def build(snippet, dest):
         return ultisnips.build(snippet)
     elif dest == 'xptemplate':
         return xptemplate.build(snippet)
-

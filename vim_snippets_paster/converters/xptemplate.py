@@ -1,5 +1,6 @@
 import re
 
+from . import ultility
 from .snippet import Snippet
 from .ultility import (NotImplementFeatureException,
                        UnsupportFeatureException, embeded)
@@ -200,6 +201,7 @@ class XptemplateBuilder(object):
     def __init__(self, snippet):
         self.body = snippet.body
         self.hasWrap = False
+        self.wrap = ''
         self.convert_embeded_variables()
         self.convert_placeholders()
 
@@ -214,4 +216,47 @@ class XptemplateBuilder(object):
         self.body = re.sub(embeded, handle_embeded_variable, self.body)
 
     def convert_placeholders(self):
-        pass
+        placeholders = re.findall(ultility.placeholder, self.body)
+        # since transformation is not implemented, there are four cases:
+        # 1. ${1}
+        # 2. ${1:some}
+        # 3. ${VISUAL}
+        # 4. ${VISUAL:some}
+        tabstop2placeholders = {}
+        for placeholder in placeholders:
+            if not placeholder.startswith('VISUAL'):
+                colon = placeholder.find(':')
+                if colon != -1:
+                    tabstop2placeholders[placeholder[:colon]] = placeholder[colon+1:]
+
+        self.counter = 'h'
+        def handle_placeholder(match):
+            global counter
+            value = match.group(1)
+            if value.startswith('VISUAL'):
+                self.hasWrap = True
+                colon = value.find(':')
+                if colon != -1:
+                    self.wrap = value[colon+1:]
+                else:
+                    self.wrap = 'VISUAL'
+                placeholder = self.wrap
+            elif value.isdigit():
+                if value == '0':
+                    placeholder = 'cursor'
+                elif value in tabstop2placeholders:
+                    placeholder = tabstop2placeholders[value]
+                else:
+                    # add prefix make it safier, but dirty
+                    self.counter = chr(ord(self.counter) + 1)
+                    placeholder = self.counter
+            else:
+                tabstop = value.split(':')[0]
+                if tabstop == '0':
+                    placeholder = 'cursor'
+                else:
+                    placeholder = tabstop2placeholders[tabstop]
+            return '`%s^' % placeholder
+
+        self.body = re.sub(ultility.placeholder, handle_placeholder, self.body)
+

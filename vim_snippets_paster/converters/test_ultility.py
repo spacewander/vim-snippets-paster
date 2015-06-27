@@ -25,8 +25,9 @@ def test_unsupport_feature_exception():
         assert e.message == '%s is unsupport' % 'some'
 
 def test_format_placeholders():
-    lines = ["it is ${VISUAL}", 'and ${0}']
-    assert format_placeholders(lines) == ["it is $VISUAL", 'and $0']
+    lines = ["it is $VISUAL", 'and $0', 'and $1', 'and \$2']
+    assert format_placeholders(lines) == (
+            ["it is ${VISUAL}", 'and ${0}', 'and ${1}', 'and \$2'])
 
 def test_not_implement_handle():
     lines = """snippet st struct

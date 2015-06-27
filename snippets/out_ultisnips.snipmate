@@ -22,7 +22,7 @@ snippet def #define ...
 
 snippet #if #if #endif
 	#if ${1:0}
-	$VISUAL$0
+	${VISUAL}${0}
 	#endif
 
 #embed python code is not implemented
@@ -37,30 +37,30 @@ snippet Inc #include <> (Inc)
 snippet mark #pragma mark (mark)
 	#if 0
 	${1:#pragma mark -
-	}#pragma mark $2
+	}#pragma mark ${2}
 	#endif
 	
-	$0
+	${0}
 
 snippet main main() (main)
 	int main(int argc, char *argv[])
 	{
-	    $VISUAL$0
+	    ${VISUAL}${0}
 	    return 0;
 	}
 
 snippet for for loop (for)
-	for (${2:i} = 0; $2 < ${1:count}; ${3:++$2}) {
-	    $VISUAL$0
+	for (${2:i} = 0; ${2} < ${1:count}; ${3:++${2}}) {
+	    ${VISUAL}${0}
 	}
 
 snippet fori for int loop (fori)
-	for (${4:int} ${2:i} = 0; $2 < ${1:count}; ${3:++$2}) {
-	    $VISUAL$0
+	for (${4:int} ${2:i} = 0; ${2} < ${1:count}; ${3:++${2}}) {
+	    ${VISUAL}${0}
 	}
 
 snippet enum Enumeration
-	enum ${1:name} { $0 };
+	enum ${1:name} { ${0} };
 
 #embed python code is not implemented
 #snippet once "Include header once only guard"
@@ -85,12 +85,12 @@ snippet td Typedef
 
 snippet wh while loop
 	while(${1:/* condition */}) {
-	    $VISUAL$0
+	    ${VISUAL}${0}
 	}
 
 snippet do do...while loop (do)
 	do {
-	    $VISUAL$0
+	    ${VISUAL}${0}
 	} while(${1:/* condition */});
 
 #ultisnips use python's regex syntax to transform variable,
@@ -102,7 +102,7 @@ snippet do do...while loop (do)
 
 snippet eli else if .. (eli)
 	else if (${1:/* condition */}) {
-	    $VISUAL$0
+	    ${VISUAL}${0}
 	}
 
 #ultisnips use python's regex syntax to transform variable,
@@ -123,7 +123,7 @@ snippet eli else if .. (eli)
 snippet fun function
 	${1:void} ${2:function_name}(${3})
 	{
-	    $VISUAL$0
+	    ${VISUAL}${0}
 	}
 
 snippet fund function declaration

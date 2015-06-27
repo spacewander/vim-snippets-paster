@@ -27,7 +27,11 @@ placeholder = re.compile('\${(.*?)}', re.MULTILINE | re.DOTALL)
 transformation = re.compile('\${(\d+/.*?)}', re.MULTILINE | re.DOTALL)
 
 def format_placeholders(lines):
-    """convert ${0} and ${VISUAL} to $0 and $VISUAL"""
-    return [line.replace('${0}', '$0').replace('${VISUAL}', '$VISUAL') \
-            for line in lines]
+    """
+    1. convert $0 and $VISUAL to ${0} and ${VISUAL}
+    2. convert $1, $2, ... into ${1}, ${2}, ...
+    """
+    return ([
+        re.sub('(?<!\\\)\$(\d+)', '${\\1}', line)
+        .replace('$VISUAL', '${VISUAL}') for line in lines])
 
