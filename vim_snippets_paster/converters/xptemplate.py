@@ -6,25 +6,6 @@ from .ultility import (NotImplementFeatureException,
                        UnsupportFeatureException, embeded)
 
 PREDEFINED_VALUE = {
-    '$SParg':   ' ',
-    '$SPop':    ' ',
-    '$VOID':    '',
-    '$BRif':    ' ',
-    '$BRel':    '\n',
-    '$BRloop':  ' ',
-    '$BRstc':   ' ',
-    '$BRfun':   ' ',
-    '$SPfun':   '',
-    '$SPcmd':   ' ',
-    '$TRUE':    '1',
-    '$FALSE':   '0',
-    '$NULL':    '0',
-    '$UNDEFINED': '0',
-    '$VOID_LINE': '',
-    '$CURSOR_PH': 'CURSOR',
-    '$DATE_FMT': '%Y %b %d',
-    '$TIME_FMT': '"%H:%M:%S"',
-    '$DATETIME_FMT': '%c'
 }
 
 def parse(input, ct):
@@ -82,19 +63,47 @@ class XptemplateParser(object):
         else:
             self.visual = None
 
-        # TODO not implemented for XSET and XSETm yet, just ignore them
         body_lines = []
-        fitered_xset_body = [l for l in input[1:] if not l.startswith('XSET ')]
+        # remove XSET/XSETm/repeation(`...^)
         in_XSETm = False
-        for line in fitered_xset_body:
+        for line in input[1:]:
             if line.startswith('XSETm END'):
                 in_XSETm = False
                 continue
             elif line.startswith('XSETm '):
                 in_XSETm = True
-            if not in_XSETm:
-                body_lines.append(line)
+            if not in_XSETm and not line.startswith('XSET '):
+                if not line.lstrip().startswith('`...^'):
+                    body_lines.append(line)
+            else:
+                body_lines.append('#' + line)
         body = '\n'.join(body_lines)
+
+        # handle XPTvar
+        self.var = {
+            '$SParg':   ' ',
+            '$SPop':    ' ',
+            '$VOID':    '',
+            '$BRif':    ' ',
+            '$BRel':    '\n',
+            '$BRloop':  ' ',
+            '$BRstc':   ' ',
+            '$BRfun':   ' ',
+            '$SPfun':   '',
+            '$SPcmd':   ' ',
+            '$TRUE':    '1',
+            '$FALSE':   '0',
+            '$NULL':    '0',
+            '$UNDEFINED': '0',
+            '$VOID_LINE': '',
+            '$CURSOR_PH': 'CURSOR',
+            '$DATE_FMT': '%Y %b %d',
+            '$TIME_FMT': '"%H:%M:%S"',
+            '$DATETIME_FMT': '%c'
+        }
+        for name in ct:
+            if name.startswith('$'):
+                self.var[name] = ct[name]
 
         snip = Snippet('xptemplate', snip_name, body=self.parse_body(body),
                     description=self.unescape_description(comment.lstrip()))
@@ -111,7 +120,13 @@ class XptemplateParser(object):
                                          alias_name, body=snip.body,
                                          description=snip.description)
                                  for alias_name in aliases)
-        # TODO: abbr
+        elif 'syn' in self.x_attributes: # syn is alias of synonym
+            aliases = self.x_attributes['syn'].split('|')
+            self.snippets.extend(Snippet('xptemplate',
+                                         alias_name, body=snip.body,
+                                         description=snip.description)
+                                 for alias_name in aliases)
+        # ignore abbr
 
 
     def parse_body(self, body):
@@ -129,7 +144,7 @@ class XptemplateParser(object):
         value, _, placeholder = match.group(1).partition('^')
         # filter specific value
         if value in ('cursor', 'CURSOR'):
-            return "$0"
+            return "${0}"
         if value in ('$author', '$email'):
             return '`%s`' % value
         # In xptemplate, the syntax used to embed vimscript is the same as
@@ -147,8 +162,8 @@ class XptemplateParser(object):
                 return "${VISUAL:%s}" % placeholder
             return "$VISUAL"
 
-        if value in PREDEFINED_VALUE:
-            return PREDEFINED_VALUE[value]
+        if value in self.var:
+            return self.var[value]
 
         include_tp = ''
         if value[0] == ':' and value[-1] == ':':

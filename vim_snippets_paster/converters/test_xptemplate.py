@@ -4,14 +4,20 @@ from .snippet import Snippet
 from .ultility import NotImplementFeatureException
 from .xptemplate import parse, build, XptemplateBuilder
 
+def get_parsed_body(input):
+    return parse(input.split('\n'), {})[0].body
+
 if_snippet = """XPT if
 if`$SPcmd^(`$SParg^`condition^`$SParg^)`$BRif^{
     `cursor^
 }"""
 
 if_snippet_after = """if ( ${1:condition} ) {
-    $0
+    ${0}
 }"""
+
+def test_normal_snippet():
+    assert get_parsed_body(if_snippet) == if_snippet_after
 
 for_snippet = """XPT for hint=for\ (..;..;++)
 for (`i^ = `0^; `i^ < `len^; ++`i^) {
@@ -19,8 +25,11 @@ for (`i^ = `0^; `i^ < `len^; ++`i^) {
 }"""
 
 for_snippet_after = """for (${1:i} = ${2:0}; $1 < ${3:len}; ++$1) {
-    $0
+    ${0}
 }"""
+
+def test_mirror():
+    assert get_parsed_body(for_snippet) == for_snippet_after
 
 memset_snippet = """XPT memset " memset (..., ..., sizeof (...) ... )
 memset(`$SParg^`buffer^,`$SPop^`what^0^,`$SPop^sizeof(`$SParg^`type^int^`$SParg^)`$SPop^*`$SPop^`count^`$SParg^)
@@ -29,6 +38,18 @@ memset(`$SParg^`buffer^,`$SPop^`what^0^,`$SPop^sizeof(`$SParg^`type^int^`$SParg^
 memset_snippet_after = """memset( ${1:buffer}, ${2:0}, sizeof( ${3:int} ) * ${4:count} )
 """
 
+memset_snippet_defined = """memset(${1:buffer}, ${2:0}, sizeof(${3:int}) * ${4:count})
+"""
+
+def test_placeholder():
+    assert get_parsed_body(memset_snippet) == memset_snippet_after
+    ct = {
+        '$SParg': '',
+        'some': 'else'
+    }
+    assert parse(memset_snippet.split('\n'), ct)[0].body == \
+            memset_snippet_defined
+
 call_snippet = """XPT call wraponly=param " ..( .. )
 `name^(`$SParg^`param^`$SParg^)"""
 
@@ -36,6 +57,12 @@ call_snippet_wraponly = """XPT call wraponly=param " ..( .. )
 `name^(`$SParg^`param^`$SParg^)"""
 
 call_snippet_after = """${1:name}( $VISUAL )"""
+
+def test_wrap():
+    assert get_parsed_body(call_snippet) == call_snippet_after
+
+def test_wraponly():
+    assert get_parsed_body(call_snippet_wraponly) == call_snippet_after
 
 fcomment_snippet = """XPT fcomment
 /**
@@ -48,6 +75,9 @@ fcomment_snippet_after = """/**
  */
 """
 
+def test_author():
+    assert get_parsed_body(fcomment_snippet) == fcomment_snippet_after
+
 alias_snippet = """XPT fr alias=for hint=for\ (..;..;++)
 for (`i^ = `0^; `i^ < `len^; ++`i^) {
     `cursor^
@@ -57,33 +87,6 @@ synonym_snippet = """XPT fr synonym=for|fri hint=for\ (..;..;++)
 for (`i^ = `0^; `i^ < `len^; ++`i^) {
     `cursor^
 }"""
-
-unescape_snippet = """XPT test " \$\(\ bla
-test"""
-
-unescape_hint_snippet = """XPT test hint=\$\(\ bla
-test"""
-
-def get_parsed_body(input):
-    return parse(input.split('\n'), {})[0].body
-
-def test_normal_snippet():
-    assert get_parsed_body(if_snippet) == if_snippet_after
-
-def test_mirror():
-    assert get_parsed_body(for_snippet) == for_snippet_after
-
-def test_placeholder():
-    assert get_parsed_body(memset_snippet) == memset_snippet_after
-
-def test_wrap():
-    assert get_parsed_body(call_snippet) == call_snippet_after
-
-def test_wraponly():
-    assert get_parsed_body(call_snippet_wraponly) == call_snippet_after
-
-def test_author():
-    assert get_parsed_body(fcomment_snippet) == fcomment_snippet_after
 
 def test_alias():
     snippets = parse(alias_snippet.split('\n'), {})
@@ -103,6 +106,12 @@ def test_description():
 
 def test_hint():
     assert get_parsed_description(for_snippet) == "for (..;..;++)"
+
+unescape_snippet = """XPT test " \$\(\ bla
+test"""
+
+unescape_hint_snippet = """XPT test hint=\$\(\ bla
+test"""
 
 def test_unescape():
     assert get_parsed_description(unescape_snippet) == "$(\ bla"
@@ -153,6 +162,33 @@ if_snippet_obj = Snippet('ultisnips', name='if',
 if_snippet_obj_after = """XPT if "if snippet
 if ...
 ...XPT"""
+
+XSET_snippet = """XPT XSET
+XSET symbol|post=UpperCase(V())
+#ifndef `symbol^"""
+
+XSET_snippet_after = """#XSET symbol|post=UpperCase(V())
+#ifndef ${1:symbol}"""
+
+def test_handle_XSET():
+    assert get_parsed_body(XSET_snippet) == XSET_snippet_after
+
+repeation_snippet = """XPT repeation
+switch (`^) {
+    `...^
+    case `^0^ :
+        `^
+    break;
+    `...^"""
+repeation_snippet_after = """switch (`^) {
+    case `^0^ :
+        `^
+    break;"""
+
+def test_repeation():
+    assert get_parsed_body(repeation_snippet) == repeation_snippet_after
+
+## features in building step
 
 def test_build():
     assert build(if_snippet_obj) == if_snippet_obj_after

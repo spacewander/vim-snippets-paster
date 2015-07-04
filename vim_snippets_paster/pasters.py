@@ -35,6 +35,7 @@ def paste(src, dest, converter, texts):
         else:
             return header + '\n\n' + '\n'.join(output)
     elif dest == 'xptemplate':
+        # don't implement xpt-snippet-mark
         if 'priority' in ct:
             header = ct['priority']
         else:
@@ -77,7 +78,11 @@ def paste_non_snippets(src, dest, text, ct):
     output = []
     for line in text:
         line = line.lstrip()
-        if line.startswith(old_comment):
+        # simply append all empty lines
+        if line == '':
+            output.append(line)
+        # handle comment
+        elif line.startswith(old_comment):
             if new_comment != old_comment:
                 # Sometimes there is comment art in the snippet, like:
                 # ######################
@@ -94,8 +99,10 @@ def paste_non_snippets(src, dest, text, ct):
                     comment_len += 1
                 line = new_comment * comment_len + line[comment_len:]
             output.append(line)
-        elif line == '':
-            output.append(line)
+        elif line.startswith('XPTvar'):
+            _, name, value = line.split(None, 2)
+            ct[name] = value # all XPTvar start with $
+        # handle those can be remained in other snippet type
         else:
             if line.startswith('extends '):
                 if dest in ('snipmate', 'ultisnips'):
