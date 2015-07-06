@@ -31,6 +31,53 @@ for_snippet_after = """for (${1:i} = ${2:0}; $1 < ${3:len}; ++$1) {
 def test_mirror():
     assert get_parsed_body(for_snippet) == for_snippet_after
 
+ComeFirst_snippet = """XPT for
+XSET ComeFirst=0 len
+for (`i^ = `0^; `i^ < `len^; ++`i^)"""
+
+ComeFirst_snippet_after = """for (${3:i} = ${1:0}; $3 < ${2:len}; ++$3)"""
+
+def test_ComeFirst():
+    assert get_parsed_body(ComeFirst_snippet) == ComeFirst_snippet_after
+
+ComeLast_snippet = """XPT for
+XSET ComeLast=i len
+for (`i^ = `0^; `i^ < `len^; ++`i^)"""
+
+ComeLast_snippet_after = """for (${2:i} = ${1:0}; $2 < ${3:len}; ++$2)"""
+
+def test_ComeLast():
+    assert get_parsed_body(ComeLast_snippet) == ComeLast_snippet_after
+
+# filter placeholder-edge out
+edge_snippet = """XPT edge
+`(`XPT`)^"""
+edge_snippet1 = """XPT edge
+`(`XPT`)^...XPT^"""
+
+left_only_edge_snippet = """XPT edge
+`(`XPT^)"""
+left_only_edge_snippet1 = """XPT edge
+`(`XPT^...XPT^)"""
+
+def test_edge():
+    assert get_parsed_body(edge_snippet) == "(${1:XPT})"
+    assert get_parsed_body(edge_snippet1) == "(${1:...XPT})"
+
+def test_left_only_edge():
+    assert get_parsed_body(left_only_edge_snippet) == "(${1:XPT})"
+    assert get_parsed_body(left_only_edge_snippet1) == "(${1:...XPT})"
+
+# leading-placeholder define the first placeholder among the same item
+leading_placeholder_snippet = """XPT leading
+for (`i^ = `0^; `i^ < ``0^; ++`i^)"""
+
+leading_placeholder_snippet_after = """for (${1:i} = $2; $1 < ${2:0}; ++$1)"""
+
+def test_leading_placeholder():
+    assert get_parsed_body(leading_placeholder_snippet) == \
+            leading_placeholder_snippet_after
+
 memset_snippet = """XPT memset " memset (..., ..., sizeof (...) ... )
 memset(`$SParg^`buffer^,`$SPop^`what^0^,`$SPop^sizeof(`$SParg^`type^int^`$SParg^)`$SPop^*`$SPop^`count^`$SParg^)
 """
