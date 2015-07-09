@@ -79,10 +79,12 @@ XPT fcomment
  *     `cursor^
  * @return {`int^} `desc^
  */
+...XPT
 
 
 XPT para syn=comment	" comment parameter
 @param {`Object^} `name^ `desc^
+...XPT
 
 XPT filehead
 XSET cursor|pre=CURSOR

@@ -1,0 +1,75 @@
+
+
+
+snippet printf "printf(...)"
+printf( "${1:pattern}"${2:elts} )
+endsnippet
+
+snippet sprintf "sprintf(...)"
+sprintf( ${1:str}, "${2:pattern}"${3:elts} )
+endsnippet
+
+snippet snprintf "snprintf(...)"
+snprintf( ${1:str}, ${2:size}, "${3:pattern}"${4:elts} )
+endsnippet
+
+snippet fprintf "fprintf(...)"
+fprintf( ${1:stream}, "${2:pattern}"${3:elts} )
+endsnippet
+
+snippet memcpy "memcpy (..., ..., sizeof (...) ... )"
+memcpy( ${1:dest}, ${2:source}, sizeof(${3:int}) * ${4:count} )
+endsnippet
+
+snippet memset "memset (..., ..., sizeof (...) ... )"
+memset( ${1:buffer}, ${2:0}, sizeof( ${3:int} ) * ${4:count} )
+endsnippet
+
+snippet malloc "malloc ( ... );"
+(${1:int}*)malloc( sizeof( $1 ) * ${2:count} )
+endsnippet
+
+snippet assert "assert (.., msg)"
+assert( ${1:isTrue}, "${2:text}" )
+endsnippet
+
+snippet fcomment
+/**
+ * @author : `g:snips_author` | `g:snips_author_email`
+ * @description
+ *     ${0}
+ * @return {${1:int}} ${2:desc}
+ */
+endsnippet
+
+snippet para "comment parameter"
+@param {${1:Object}} ${2:name} ${3:desc}
+endsnippet
+
+snippet comment "comment parameter"
+@param {${1:Object}} ${2:name} ${3:desc}
+endsnippet
+
+snippet filehead
+/**-------------------------/// ${1:sum} \\\---------------------------
+ *
+ * <b>${2:function}</b>
+ * @version : ${3:1.0}
+ * @since : `!v strftime("%Y %b %d")`
+ *
+ * @description :
+ *     ${0}
+ * @usage :
+ *
+ * @author : `g:snips_author` | `g:snips_author_email`
+ * @copyright ${4:.com.cn}
+ * @TODO :
+ *
+ *--------------------------\\\ $1 ///---------------------------*/
+
+endsnippet
+
+
+snippet call "..( .. )"
+${1:name}( $VISUAL )
+endsnippet

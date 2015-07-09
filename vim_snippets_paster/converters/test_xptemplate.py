@@ -214,8 +214,7 @@ XSET_snippet = """XPT XSET
 XSET symbol|post=UpperCase(V())
 #ifndef `symbol^"""
 
-XSET_snippet_after = """#XSET symbol|post=UpperCase(V())
-#ifndef ${1:symbol}"""
+XSET_snippet_after = """#ifndef ${1:symbol}"""
 
 def test_handle_XSET():
     assert get_parsed_body(XSET_snippet) == XSET_snippet_after

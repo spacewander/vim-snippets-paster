@@ -1,0 +1,70 @@
+version 1
+
+
+
+
+snippet printf printf(...)
+	printf( "${1:pattern}"${2:elts} )
+
+snippet sprintf sprintf(...)
+	sprintf( ${1:str}, "${2:pattern}"${3:elts} )
+
+snippet snprintf snprintf(...)
+	snprintf( ${1:str}, ${2:size}, "${3:pattern}"${4:elts} )
+
+snippet fprintf fprintf(...)
+	fprintf( ${1:stream}, "${2:pattern}"${3:elts} )
+
+snippet memcpy memcpy (..., ..., sizeof (...) ... )
+	memcpy( ${1:dest}, ${2:source}, sizeof(${3:int}) * ${4:count} )
+
+snippet memset memset (..., ..., sizeof (...) ... )
+	memset( ${1:buffer}, ${2:0}, sizeof( ${3:int} ) * ${4:count} )
+
+snippet malloc malloc ( ... );
+	(${1:int}*)malloc( sizeof( $1 ) * ${2:count} )
+
+snippet assert assert (.., msg)
+	assert( ${1:isTrue}, "${2:text}" )
+
+#$email is unsupport
+#XPT fcomment
+#/**
+# * @author : `$author^ | `$email^
+# * @description
+# *     `cursor^
+# * @return {`int^} `desc^
+# */
+#...XPT
+
+
+snippet para comment parameter
+	@param {${1:Object}} ${2:name} ${3:desc}
+
+snippet comment comment parameter
+	@param {${1:Object}} ${2:name} ${3:desc}
+
+#$email is unsupport
+#XPT filehead
+#XSET cursor|pre=CURSOR
+#/**-------------------------/// `sum^ \\\---------------------------
+# *
+# * <b>`function^</b>
+# * @version : `1.0^
+# * @since : `strftime("%Y %b %d")^
+# *
+# * @description :
+# *     `cursor^
+# * @usage :
+# *
+# * @author : `$author^ | `$email^
+# * @copyright `.com.cn^
+# * @TODO :
+# *
+# *--------------------------\\\ `sum^ ///---------------------------*/
+#
+
+
+
+snippet call ..( .. )
+	${1:name}( $VISUAL )

@@ -44,14 +44,6 @@ class XptemplateParser(object):
             cur_attr = ''
             self.x_attributes[name] = value
 
-        if 'hidden' in self.x_attributes:
-            if 'hidden' not in ct:
-                ct['hidden'] = {}
-            # store the snippet body so that other snippets can include it
-            ct['hidden'][snip_name] = '\n'.join(input[1:])
-            self.snippets = []
-            return
-
         # hint is like "description
         if comment == '' and 'hint' in self.x_attributes:
             comment = self.x_attributes['hint']
@@ -68,7 +60,8 @@ class XptemplateParser(object):
         body_lines = []
         # comment out XSET/XSETm
         # remove repeation(`...^)
-        # and also handle ComeFirst/ComeLast
+        # handle ComeFirst/ComeLast
+        # and remove ...XPT
         in_XSETm = False
         for line in input[1:]:
             if line.startswith('XSETm END'):
@@ -90,12 +83,9 @@ class XptemplateParser(object):
                         _, values = expr.split('=', 1)
                         for i, value in enumerate(values.split(' ')):
                             self.values[value] = -(i + 1)
-                    else:
-                        body_lines.append('#' + line)
-                elif not line.lstrip().startswith('`...^'):
+                elif not (line.startswith('...XPT') or
+                        line.lstrip().startswith('`...^')):
                     body_lines.append(line)
-            else:
-                body_lines.append('#' + line)
         body = '\n'.join(body_lines)
 
         # handle XPTvar
@@ -123,6 +113,14 @@ class XptemplateParser(object):
         for name in ct:
             if name.startswith('$'):
                 self.var[name] = ct[name]
+
+        if 'hidden' in self.x_attributes:
+            if 'hidden' not in ct:
+                ct['hidden'] = {}
+            # store the snippet body so that other snippets can include it
+            ct['hidden'][snip_name] = body
+            self.snippets = []
+            return
 
         snip = Snippet('xptemplate', snip_name, body=self.parse_body(body),
                     description=self.unescape_description(comment.lstrip()))
@@ -198,6 +196,7 @@ class XptemplateParser(object):
         if value in self.var:
             return self.var[value]
 
+        # Handle include value
         include_tp = ''
         if value[0] == ':' and value[-1] == ':':
             include_tp = value[1:-1]
@@ -243,7 +242,11 @@ class XptemplateParser(object):
                 return "${%d:%s}" % (order, value)
             else:
                 return "$%d" % self.values[value]
-        raise ValueError("all values should has its own order_counter")
+        else:
+            order = self.values[value]
+            if placeholder != '':
+                return "${%d:%s}" % (order, placeholder)
+            return "${%d:%s}" % (order, value)
 
     def convert_xptemplate_placeholders(self, body):
         """

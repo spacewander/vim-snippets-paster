@@ -26,3 +26,9 @@ def test_snipmate2ultisnips():
 def test_ultisnips2snipmate():
     assert_snippet_equal('ultisnips', 'snipmate')
 
+def test_xptemplate2snipmate():
+    assert_snippet_equal('xptemplate', 'snipmate')
+
+def test_xptemplate2ultisnips():
+    assert_snippet_equal('xptemplate', 'ultisnips')
+

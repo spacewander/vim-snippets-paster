@@ -12,7 +12,7 @@ def paste(src, dest, converter, texts):
     """
     output = []
     ct = {}
-    if src == 'snipmate':
+    if src in ('snipmate', 'xptemplate'):
         for tag, text in texts:
             if tag == 'others':
                 output.append(paste_non_snippets(src, dest, text, ct))
@@ -27,6 +27,7 @@ def paste(src, dest, converter, texts):
 
     if len(output) == 0:
         return ''
+
     # if the first part is wrapped with comment, insert the header after it
     if dest == 'snipmate':
         header = 'version 1'
@@ -121,9 +122,11 @@ def paste_non_snippets(src, dest, text, ct):
                         if priority != 'priority 0':
                             output.append(priority)
                         break
-
-    return '\n'.join(output)
-
+    output = '\n'.join(output)
+    # a little newline is acceptable, but empty content is not
+    if output.strip() == '':
+        return ''
+    return output
 
 xp_priority_map = {
     'all'		: 64,
