@@ -61,15 +61,19 @@ if not snip.c:
     ifndef ${1:}
     #define $1"""
 
+def test_find_placeholder():
+    placeholder  = """${1:0} ${0} $2 ${VISUAL} $1"""
+    assert re.sub(ultility.placeholder, 'X', placeholder) == """X X X X X"""
+
 def test_find_multiline_placeholder():
     multiline_placeholder = """
     #if 0
     ${1:#pragma mark -
-    }#pragma mark $2
+    }#pragma mark $2 ...
     #endif"""
     assert re.sub(ultility.placeholder, '', multiline_placeholder) == """
     #if 0
-    #pragma mark $2
+    #pragma mark  ...
     #endif"""
 
 def test_find_tranformation():

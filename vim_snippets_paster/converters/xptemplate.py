@@ -214,9 +214,9 @@ class XptemplateParser(object):
         if value.startswith(self.edge_magic_numer):
             value = value[len(self.edge_magic_numer):]
             should_set_edge = True
-        self.order_counter[value] = self.order_counter.setdefault(value, 0) + 1
+        self.order_counters[value] = self.order_counters.setdefault(value, 0) + 1
         if should_set_edge:
-            self.edge[value] = self.order_counter[value]
+            self.edge[value] = self.order_counters[value]
 
         # Update self.value so that we can use it in next parser
         if value not in self.values:
@@ -233,9 +233,9 @@ class XptemplateParser(object):
         """
         # match.group(1) may be 'value^placeholder' or 'value'
         value, _, placeholder = match.group(1).partition('^')
-        if value in self.order_counter:
-            self.order_counter[value] -= 1
-            if self.order_counter[value] == 0:
+        if value in self.order_counters:
+            self.order_counters[value] -= 1
+            if self.order_counters[value] == 0:
                 order = self.values[value]
                 if placeholder != '':
                     return "${%d:%s}" % (order, placeholder)
@@ -253,7 +253,7 @@ class XptemplateParser(object):
         convert the xptemplate style placeholder(`value^placeholder^) to
         snipmate-like one(${order:placeholder})
         """
-        self.order_counter = {}
+        self.order_counters = {}
         self.edge = {}
 
         placeholder_pattern = re.compile('`([^^`]+\^?[^^`]*)\^')
@@ -263,11 +263,11 @@ class XptemplateParser(object):
             if order < 0: # value in ComeLast
                 self.values[value] = self.order - order
         # placeholder with edge should be the first, so reset counter here
-        for value in self.order_counter:
+        for value in self.order_counters:
             if value not in self.edge:
-                self.order_counter[value] = 1
+                self.order_counters[value] = 1
             else:
-                self.order_counter[value] = self.edge[value]
+                self.order_counters[value] = self.edge[value]
         return re.sub(placeholder_pattern, self.convert_value, r)
 
     def unescape_description(self, desc):
@@ -306,48 +306,88 @@ class XptemplateBuilder(object):
         self.body = re.sub(embeded, handle_embeded_variable, self.body)
 
     def convert_placeholders(self):
-        placeholders = re.findall(ultility.placeholder, self.body)
-        # since transformation is not implemented, there are four cases:
+        """
+        iterate each tabstop and convert it to xptemplate style placeholder
+        """
+        # since transformation is not implemented, there are seven cases:
+        # 0. $1
         # 1. ${1}
         # 2. ${1:some}
         # 3. ${VISUAL}
         # 4. ${VISUAL:some}
-        tabstop2placeholders = {}
-        for placeholder in placeholders:
-            if not placeholder.startswith('VISUAL'):
-                colon = placeholder.find(':')
-                if colon != -1:
-                    tabstop2placeholders[placeholder[:colon]] = \
-                            placeholder[colon+1:]
-
-        self.counter = 'h'
-        def handle_placeholder(match):
-            global counter
-            value = match.group(1)
-            if value.startswith('VISUAL'):
-                self.hasWrap = True
-                colon = value.find(':')
-                if colon != -1:
-                    self.wrap = value[colon+1:]
-                else:
-                    self.wrap = 'VISUAL'
-                placeholder = self.wrap
-            elif value.isdigit():
-                if value == '0':
-                    placeholder = 'cursor'
-                elif value in tabstop2placeholders:
-                    placeholder = tabstop2placeholders[value]
-                else:
-                    # add prefix make it safier, but dirty
-                    self.counter = chr(ord(self.counter) + 1)
-                    placeholder = self.counter
+        # 5. ${0}
+        # 6. ${0:some}
+        order = 1
+        unorder = False
+        self.tabstop_to_placeholder = {}
+        self.tabstop_counters = {}
+        self.should_have_edge = set()
+        self.mirrors = set()
+        for match in re.finditer(ultility.placeholder, self.body):
+            placeholder = match.group(1)
+            if placeholder is None: # case 0
+                placeholder = match.group(2)
+            if placeholder.startswith('VISUAL') or placeholder.startswith('0'):
+                continue
+            tabstop_order = placeholder
+            if placeholder.isdigit():
+                self.mirrors.add(placeholder)
             else:
-                tabstop = value.split(':')[0]
-                if tabstop == '0':
-                    placeholder = 'cursor'
-                else:
-                    placeholder = tabstop2placeholders[tabstop]
-            return '`%s^' % placeholder
+                tabstop_order, text = placeholder.split(':', 2)
+                self.tabstop_to_placeholder[tabstop_order] = text
+                if tabstop_order in self.mirrors: # $digit met
+                    self.should_have_edge.add(tabstop_order)
 
-        self.body = re.sub(ultility.placeholder, handle_placeholder, self.body)
+            if not unorder:
+                if order <= int(tabstop_order) <= order + 1: # 1 1 2 3 ...
+                    order = int(tabstop_order)
+                else:
+                    unorder = True
+
+        self.counter = 'h' # for tabstop like ${1}, which doesn't have a default value
+        self.body = re.sub(ultility.placeholder, self.handle_placeholder, self.body)
+        if unorder:
+            orders = [v for k, v in
+                    sorted(self.tabstop_to_placeholder.items(), key=lambda x:x[0])]
+            come_first = "XSET ComeFirst=%s\n" % " ".join(orders)
+            self.body = come_first + self.body
+
+    def handle_placeholder(self, match):
+        """
+        used in convertion from tabstop to xptemplate style placeholder
+
+        :match is a MatchObject contains tabstop value,
+        if the tabstop is sth like $digit, the value is stored in group 2,
+        otherwise the value is stored in group 1
+        """
+        value = match.group(1)
+        if value is None:
+            value = match.group(2)
+        if value.startswith('VISUAL'):
+            self.hasWrap = True
+            colon = value.find(':')
+            if colon != -1:
+                self.wrap = value[colon+1:]
+            else:
+                self.wrap = 'VISUAL'
+            placeholder = self.wrap
+        elif value.isdigit():
+            if value == '0':
+                placeholder = 'cursor'
+            elif value in self.tabstop_to_placeholder:
+                placeholder = self.tabstop_to_placeholder[value]
+            else:
+                # add prefix make it safer, but dirty
+                self.counter = chr(ord(self.counter) + 1)
+                placeholder = self.tabstop_to_placeholder.setdefault(
+                        value, self.counter)
+        else:
+            tabstop = value.split(':')[0]
+            if tabstop == '0':
+                placeholder = 'cursor'
+            else:
+                placeholder = self.tabstop_to_placeholder[tabstop]
+                if tabstop in self.should_have_edge:
+                    return '``%s^' % placeholder
+        return '`%s^' % placeholder
 

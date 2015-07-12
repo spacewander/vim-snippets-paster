@@ -140,17 +140,20 @@ xp_priority_map = {
 def u_priority_to_xp(priority):
     """
     Convert ultisnips' priority to xptemplate one.
+    The format of xptemplate one is 'priority=lang([+-]%d)', or 'priority=0'
 
     Ultisnips priority is an integer default to 0. It can be negative.
     For xptemplate priority, see :help xpt-priority-value and
     :help xpt-priority-format.
     """
+    if priority > xp_priority_map['lang']:
+        return 'XPTemplate priority=0'
     if priority == 0:
         return 'XPTemplate priority=lang'
-    xp_priority = xp_priority_map['lang'] - priority
-    if xp_priority < 0:
-        xp_priority = 0
-    return 'XPTemplate priority=%d' % xp_priority
+    elif priority < 0:
+        return 'XPTemplate priority=lang+%d' % -priority
+    else:
+        return 'XPTemplate priority=lang-%d' % priority
 
 def xp_priority_to_u(priority):
     """

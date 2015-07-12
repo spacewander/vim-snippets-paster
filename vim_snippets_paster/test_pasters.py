@@ -31,11 +31,11 @@ def test_priority_u():
     lines = [priority_u2]
     ct = {}
     paste_non_snippets('ultisnips', 'xptemplate', lines, ct)
-    assert ct['priority'] == 'XPTemplate priority=12'
+    assert ct['priority'] == 'XPTemplate priority=lang-4'
     lines = [priority_u, priority_u2]
     ct = {}
     paste_non_snippets('ultisnips', 'xptemplate', lines, ct)
-    assert ct['priority'] == 'XPTemplate priority=15'
+    assert ct['priority'] == 'XPTemplate priority=lang-1'
 
 def test_priority_x():
     priority_x = "XPTemplate priority=lang "

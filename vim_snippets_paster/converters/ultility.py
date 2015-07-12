@@ -23,7 +23,7 @@ class UnsupportFeatureException(Exception):
         return self.message
 
 embeded = re.compile('`(.*?)`', re.MULTILINE | re.DOTALL)
-placeholder = re.compile('\${(.*?)}', re.MULTILINE | re.DOTALL)
+placeholder = re.compile('\${(.*?)}|\$(\d+)(?!\w)', re.MULTILINE | re.DOTALL)
 transformation = re.compile('\${(\d+/.*?)}', re.MULTILINE | re.DOTALL)
 
 def format_placeholders(lines):

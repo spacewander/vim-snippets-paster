@@ -255,10 +255,27 @@ def wrap_body_to_object(snippet_body):
     return Snippet('ultisnips', name='some', body=snippet_body)
 
 placeholders_body = """${1:some} ${1} ${2} ${0:one} ${3} ${4}${VISUAL:else}"""
+placeholders_body2 = """$1 ${1:some} ${2} ${0} ${VISUAL}"""
+placeholders_body3 = """$2 $1 ${1:some} ${3:else}"""
+placeholders_body4 = """$2 $1"""
 
 def test_convert_placeholders():
     builder = XptemplateBuilder(wrap_body_to_object(placeholders_body))
     assert builder.hasWrap
     assert builder.wrap == 'else'
     assert builder.body == "`some^ `some^ `i^ `cursor^ `j^ `k^`else^"
+
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body2))
+    assert builder.hasWrap
+    assert builder.wrap == 'VISUAL'
+    assert builder.body == "`some^ ``some^ `i^ `cursor^ `VISUAL^"
+
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body3))
+    assert not builder.hasWrap
+    assert builder.body == """XSET ComeFirst=some i else
+`i^ `some^ ``some^ `else^"""
+
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body4))
+    assert builder.body == """XSET ComeFirst=j i
+`i^ `j^"""
 
