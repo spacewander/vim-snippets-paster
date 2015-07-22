@@ -23,7 +23,11 @@ class UnsupportFeatureException(Exception):
         return self.message
 
 embeded = re.compile('`(.*?)`', re.MULTILINE | re.DOTALL)
-placeholder = re.compile('\${(.*?)}|\$(\d+)(?!\w)', re.MULTILINE | re.DOTALL)
+
+# It is not easy to handle nested brackets with regex in python
+# See http://stackoverflow.com/questions/5454322/python-how-to-match-nested-parentheses-with-regex
+# Current version can only handle two-level nesting, but it may be enough
+placeholder = re.compile('\${([^}]*\$\{[^}]*\}.*?|.*?)}|\$(\d+)(?!\w)', re.MULTILINE | re.DOTALL)
 transformation = re.compile('\${(\d+/.*?)}', re.MULTILINE | re.DOTALL)
 
 def format_placeholders(lines):

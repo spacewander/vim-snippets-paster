@@ -1,7 +1,7 @@
 import pytest
 
 from .snippet import Snippet
-from .ultility import NotImplementFeatureException
+from .ultility import NotImplementFeatureException, UnsupportFeatureException
 from .xptemplate import parse, build, XptemplateBuilder
 
 def get_parsed_body(input):
@@ -54,19 +54,25 @@ edge_snippet = """XPT edge
 `(`XPT`)^"""
 edge_snippet1 = """XPT edge
 `(`XPT`)^...XPT^"""
+edge_snippet2 = """XPT edge
+`$SParg `XPT`$SParg^"""
 
 left_only_edge_snippet = """XPT edge
 `(`XPT^)"""
 left_only_edge_snippet1 = """XPT edge
 `(`XPT^...XPT^)"""
+left_only_edge_snippet2 = """XPT edge
+`$SParg`XPT^"""
 
 def test_edge():
     assert get_parsed_body(edge_snippet) == "(${1:XPT})"
     assert get_parsed_body(edge_snippet1) == "(${1:...XPT})"
+    assert get_parsed_body(edge_snippet2) == "  ${1:XPT} "
 
 def test_left_only_edge():
     assert get_parsed_body(left_only_edge_snippet) == "(${1:XPT})"
     assert get_parsed_body(left_only_edge_snippet1) == "(${1:...XPT})"
+    assert get_parsed_body(left_only_edge_snippet2) == " ${1:XPT}"
 
 # leading-placeholder define the first placeholder among the same item
 leading_placeholder_snippet = """XPT leading
@@ -214,10 +220,9 @@ XSET_snippet = """XPT XSET
 XSET symbol|post=UpperCase(V())
 #ifndef `symbol^"""
 
-XSET_snippet_after = """#ifndef ${1:symbol}"""
-
 def test_handle_XSET():
-    assert get_parsed_body(XSET_snippet) == XSET_snippet_after
+    with pytest.raises(NotImplementFeatureException):
+        get_parsed_body(XSET_snippet)
 
 repeation_snippet = """XPT repeation
 switch (`^) {
@@ -233,6 +238,12 @@ repeation_snippet_after = """switch (`^) {
 
 def test_repeation():
     assert get_parsed_body(repeation_snippet) == repeation_snippet_after
+
+escape_snippet = """XPT escape
+`${}^"""
+
+def test_escape_xptemplate_placeholder():
+    assert get_parsed_body(escape_snippet) == "${1:\$\{\}}"
 
 ## features in building step
 
@@ -254,28 +265,42 @@ def test_convert_viml_code():
 def wrap_body_to_object(snippet_body):
     return Snippet('ultisnips', name='some', body=snippet_body)
 
-placeholders_body = """${1:some} ${1} ${2} ${0:one} ${3} ${4}${VISUAL:else}"""
-placeholders_body2 = """$1 ${1:some} ${2} ${0} ${VISUAL}"""
-placeholders_body3 = """$2 $1 ${1:some} ${3:else}"""
-placeholders_body4 = """$2 $1"""
+escape_body = "${1:`some^}"
+def test_escape_snippet_placeholder():
+    builder = XptemplateBuilder(wrap_body_to_object(escape_body))
+    assert builder.body == "`\`some\^^"
+
+placeholders = """${1:some} ${1} ${2} ${0:one} ${3} ${4}${VISUAL:else}"""
+placeholders2 = """$1 ${1:some} ${2} ${0} ${VISUAL}"""
+placeholders3 = """$2 $1 ${1:some} ${3:else}"""
+placeholders4 = """$2 $1"""
 
 def test_convert_placeholders():
-    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body))
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders))
     assert builder.hasWrap
     assert builder.wrap == 'else'
-    assert builder.body == "`some^ `some^ `i^ `cursor^ `j^ `k^`else^"
+    assert builder.body == "`some^ `some^ `^ `cursor^ `^ `^`else^"
 
-    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body2))
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders2))
     assert builder.hasWrap
     assert builder.wrap == 'VISUAL'
-    assert builder.body == "`some^ ``some^ `i^ `cursor^ `VISUAL^"
+    assert builder.body == "`some^ ``some^ `^ `cursor^ `VISUAL^"
 
-    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body3))
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders3))
     assert not builder.hasWrap
     assert builder.body == """XSET ComeFirst=some i else
 `i^ `some^ ``some^ `else^"""
 
-    builder = XptemplateBuilder(wrap_body_to_object(placeholders_body4))
+    builder = XptemplateBuilder(wrap_body_to_object(placeholders4))
     assert builder.body == """XSET ComeFirst=j i
 `i^ `j^"""
+
+nested = """for (${1:i} = ${2:0}; ${3:$1 < 10}; $1${4:++}) """
+nested2 = """for (${1:i} = ${2:0}; ${3:${1} < 10}; ${1}${4:++}) """
+
+def test_nested_body():
+    with pytest.raises(UnsupportFeatureException):
+        XptemplateBuilder(wrap_body_to_object(nested))
+    with pytest.raises(UnsupportFeatureException):
+        XptemplateBuilder(wrap_body_to_object(nested2))
 

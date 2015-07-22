@@ -27,6 +27,7 @@ def paste(src, dest, converter, texts):
 
     if len(output) == 0:
         return ''
+    output[0] = output[0].lstrip() # remove empty lines in the header
 
     # if the first part is wrapped with comment, insert the header after it
     if dest == 'snipmate':
@@ -101,7 +102,12 @@ def paste_non_snippets(src, dest, text, ct):
                 line = new_comment * comment_len + line[comment_len:]
             output.append(line)
         elif line.startswith('XPTvar'):
-            _, name, value = line.split(None, 2)
+            name_value_pair = line.split(None, 2)
+            if len(name_value_pair) == 3:
+                _, name, value = name_value_pair
+            else:
+                _, name = name_value_pair
+                value = ''
             ct[name] = value # all XPTvar start with $
         # handle those can be remained in other snippet type
         else:

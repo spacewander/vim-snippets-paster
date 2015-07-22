@@ -64,6 +64,12 @@ if not snip.c:
 def test_find_placeholder():
     placeholder  = """${1:0} ${0} $2 ${VISUAL} $1"""
     assert re.sub(ultility.placeholder, 'X', placeholder) == """X X X X X"""
+    placeholder = "${3:${1} < 10}"
+    assert re.findall(ultility.placeholder, placeholder) == [(
+        '3:${1} < 10', '')]
+    #placeholder = "${3:${2:${1} < 10} < 10}"
+    #assert re.findall(ultility.placeholder, placeholder) == [(
+        #'3:${2:${1} < 10} < 10', '')]
 
 def test_find_multiline_placeholder():
     multiline_placeholder = """

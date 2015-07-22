@@ -58,34 +58,31 @@ class XptemplateParser(object):
         self.values = {}
         self.order = 0
         body_lines = []
-        # comment out XSET/XSETm
-        # remove repeation(`...^)
+        # raise exception when meeting XSET/XSETm
+        # remove repeatition(`...^)
         # handle ComeFirst/ComeLast
         # and remove ...XPT
-        in_XSETm = False
         for line in input[1:]:
-            if line.startswith('XSETm END'):
-                in_XSETm = False
-                continue
-            elif line.startswith('XSETm '):
-                in_XSETm = True
-            if not in_XSETm:
-                if line.startswith('XSET '):
-                    _, expr = line.split(None, 1)
-                    # XSET ComeFirst=0 len
-                    if expr.startswith('ComeFirst='):
-                        _, values = expr.split('=', 1)
-                        values = values.split(' ')
-                        for i, value in enumerate(values):
-                            self.values[value] = i + 1
-                        self.order += len(values)
-                    elif expr.startswith('ComeLast='):
-                        _, values = expr.split('=', 1)
-                        for i, value in enumerate(values.split(' ')):
-                            self.values[value] = -(i + 1)
-                elif not (line.startswith('...XPT') or
-                        line.lstrip().startswith('`...^')):
-                    body_lines.append(line)
+            if line.startswith('XSETm '):
+                raise NotImplementFeatureException(feature="XSETm")
+            if line.startswith('XSET '):
+                _, expr = line.split(None, 1)
+                # XSET ComeFirst=0 len
+                if expr.startswith('ComeFirst='):
+                    _, values = expr.split('=', 1)
+                    values = values.split(' ')
+                    for i, value in enumerate(values):
+                        self.values[value] = i + 1
+                    self.order += len(values)
+                elif expr.startswith('ComeLast='):
+                    _, values = expr.split('=', 1)
+                    for i, value in enumerate(values.split(' ')):
+                        self.values[value] = -(i + 1)
+                else:
+                    raise NotImplementFeatureException(feature="XSET")
+            elif not (line.startswith('...XPT') or
+                    line.lstrip().startswith('`...^')):
+                body_lines.append(line)
         body = '\n'.join(body_lines)
 
         # handle XPTvar
@@ -148,24 +145,71 @@ class XptemplateParser(object):
 
     def parse_body(self, body):
         """parse the snippet body, convert it to snipmate-like format"""
+        body = self.remove_repeatition(body)
         self.edge_magic_numer = "Append_this-toedge_value"
         body = self.convert_edge_placeholders(body)
         return self.convert_xptemplate_placeholders(body)
 
+    def remove_repeatition(self, body):
+        """
+        :help xpt-snippet-repeatition
+        replace `...^ with repeated part
+        """
+        mark = re.compile("`\.\.\.\^(.*?)`\.\.\.\^", re.MULTILINE | re.DOTALL)
+        return re.sub(mark, r"\1", body)
+
     def convert_edge_placeholders(self, body):
+        def handle_edge(match):
+            groups = match.groups()
+            left_edge = groups[0].split(' ')
+            for i, v in enumerate(left_edge):
+                if v in self.var:
+                    left_edge[i] = self.var[v]
+            left_edge = " ".join(left_edge)
+
+            right_edge = groups[2].split(' ')
+            for i, v in enumerate(right_edge):
+                if v in self.var:
+                    right_edge[i] = self.var[v]
+            right_edge = " ".join(right_edge)
+
+            if len(groups) == 4:
+                return r"%s`%s^%s^%s" % (left_edge,
+                        self.edge_magic_numer + groups[1],
+                        groups[3],
+                        right_edge)
+            else:
+                return r"%s`%s^%s" % (left_edge,
+                        self.edge_magic_numer + groups[1],
+                        right_edge)
+
+        def handle_left_only_edge(match):
+            groups = match.groups()
+            left_edge = groups[0].split(' ')
+            for i, v in enumerate(left_edge):
+                if v in self.var:
+                    left_edge[i] = self.var[v]
+            left_edge = " ".join(left_edge)
+
+            if len(groups) == 3:
+                return r"%s`%s^%s^" % (left_edge,
+                        self.edge_magic_numer + groups[1],
+                        groups[2])
+            else:
+                return r"%s`%s^" % (left_edge,
+                        self.edge_magic_numer + groups[1])
+
         edge_with_placeholder = re.compile(
                 '`([^^`]*)`([^^`]*)`([^^]*)\^([^^`]*)\^')
-        r = re.sub(edge_with_placeholder,
-                r"\1`%s\2^\4^\3" % self.edge_magic_numer, body)
+        r = re.sub(edge_with_placeholder, handle_edge, body)
         edge = re.compile('`([^^`]*)`([^^`]*)`([^^]*)\^')
-        r = re.sub(edge, r"\1`%s\2^\3" % self.edge_magic_numer, r)
+        r = re.sub(edge, handle_edge, r)
 
         left_only_edge_with_placeholder = re.compile(
                 '`([^^`]*)`([^^]*)\^([^^`]*)\^')
-        r = re.sub(left_only_edge_with_placeholder,
-                r"\1`%s\2^\3^" % self.edge_magic_numer, r)
+        r = re.sub(left_only_edge_with_placeholder, handle_left_only_edge, r)
         left_only_edge = re.compile('`([^^`]*)`([^^`]*)\^')
-        return re.sub(left_only_edge, r"\1`%s\2^" % self.edge_magic_numer, r)
+        return re.sub(left_only_edge, handle_left_only_edge, r)
 
     def convert_placeholder(self, match):
         """
@@ -227,6 +271,10 @@ class XptemplateParser(object):
         else:
             return "`%s^" % value
 
+    def escape(self, placeholder):
+        """escape special characters like $ and {, }"""
+        return placeholder.replace('$', '\$').replace('{', '\{').replace('}', '\}')
+
     def convert_value(self, match):
         """
         :match is a MatchObject contains the value inside `^
@@ -238,15 +286,15 @@ class XptemplateParser(object):
             if self.order_counters[value] == 0:
                 order = self.values[value]
                 if placeholder != '':
-                    return "${%d:%s}" % (order, placeholder)
-                return "${%d:%s}" % (order, value)
+                    return "${%d:%s}" % (order, self.escape(placeholder))
+                return "${%d:%s}" % (order, self.escape(value))
             else:
                 return "$%d" % self.values[value]
         else:
             order = self.values[value]
             if placeholder != '':
-                return "${%d:%s}" % (order, placeholder)
-            return "${%d:%s}" % (order, value)
+                return "${%d:%s}" % (order, self.escape(placeholder))
+            return "${%d:%s}" % (order, self.escape(value))
 
     def convert_xptemplate_placeholders(self, body):
         """
@@ -289,6 +337,7 @@ def build(snip):
 
 class XptemplateBuilder(object):
     def __init__(self, snippet):
+        print(snippet.body)
         self.body = snippet.body
         self.hasWrap = False
         self.wrap = ''
@@ -318,7 +367,7 @@ class XptemplateBuilder(object):
         # 5. ${0}
         # 6. ${0:some}
         order = 1
-        unorder = False
+        self.unorder = False
         self.tabstop_to_placeholder = {}
         self.tabstop_counters = {}
         self.should_have_edge = set()
@@ -334,23 +383,31 @@ class XptemplateBuilder(object):
                 self.mirrors.add(placeholder)
             else:
                 tabstop_order, text = placeholder.split(':', 2)
+                if re.search(ultility.placeholder, text) is not None:
+                    raise UnsupportFeatureException(
+                            "xptemplate doesn't support nested placeholder")
                 self.tabstop_to_placeholder[tabstop_order] = text
                 if tabstop_order in self.mirrors: # $digit met
                     self.should_have_edge.add(tabstop_order)
 
-            if not unorder:
+            if not self.unorder:
                 if order <= int(tabstop_order) <= order + 1: # 1 1 2 3 ...
                     order = int(tabstop_order)
                 else:
-                    unorder = True
+                    self.unorder = True
 
+        # counter will be used inside function handle_placeholder
         self.counter = 'h' # for tabstop like ${1}, which doesn't have a default value
         self.body = re.sub(ultility.placeholder, self.handle_placeholder, self.body)
-        if unorder:
+        if self.unorder:
             orders = [v for k, v in
                     sorted(self.tabstop_to_placeholder.items(), key=lambda x:x[0])]
             come_first = "XSET ComeFirst=%s\n" % " ".join(orders)
             self.body = come_first + self.body
+
+    def escape(self, placeholder):
+        """escape special characters like ` and ^"""
+        return placeholder.replace('`', '\`').replace('^', '\^')
 
     def handle_placeholder(self, match):
         """
@@ -377,10 +434,14 @@ class XptemplateBuilder(object):
             elif value in self.tabstop_to_placeholder:
                 placeholder = self.tabstop_to_placeholder[value]
             else:
-                # add prefix make it safer, but dirty
-                self.counter = chr(ord(self.counter) + 1)
-                placeholder = self.tabstop_to_placeholder.setdefault(
-                        value, self.counter)
+                if self.unorder:
+                    # add prefix make it safer, but dirty
+                    self.counter = chr(ord(self.counter) + 1)
+                    placeholder = self.tabstop_to_placeholder.setdefault(
+                            value, self.counter)
+                # if placeholders are in order(no need to use ComeFirst), keep anonymous
+                else:
+                    placeholder = ''
         else:
             tabstop = value.split(':')[0]
             if tabstop == '0':
@@ -388,6 +449,6 @@ class XptemplateBuilder(object):
             else:
                 placeholder = self.tabstop_to_placeholder[tabstop]
                 if tabstop in self.should_have_edge:
-                    return '``%s^' % placeholder
-        return '`%s^' % placeholder
+                    return '``%s^' % self.escape(placeholder)
+        return '`%s^' % self.escape(placeholder)
 
